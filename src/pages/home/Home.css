@@ -1,0 +1,149 @@
+.sider-scroll {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    scrollbar-color: #fef5f5bb transparent;
+}
+.sider-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.sider-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sider-scroll::-webkit-scrollbar-thumb {
+    background: #1e40d9;
+    border-radius: 3px;
+}
+
+/* ПЕРЕОПРЕДЕЛЕНИЕ СТИЛЕЙ КОМПОНЕНТОВ */
+/* переопределение стиля при наведению на кнопки в Меню */
+.ant-menu-item-selected {
+    background-color: #ffffff6e !important;
+    color: #5372df !important;
+}
+.ant-menu-item {
+    font-size: 20px;
+}
+.ant-layout-sider-children {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0; /* чтобы flex позволил сжиматься */
+  }
+/*  */
+.main-icon:hover {
+    background-color: rgba(152, 40, 227, 0.797);
+}
+/* основные иконки в приложении */
+.main-icon {
+    font-size:24px;
+    color:rgba(255, 255, 255, 0.74);
+    background-color:rgba(255,255,255,0.3);
+    height:40px;
+    width:40px;
+    justify-content:center;
+    border-radius:8px;
+    box-shadow: 0 0px 20px rgba(0,0,0,0.2);
+    margin: 0;
+    cursor: pointer;
+}
+/* стиль текста названия программы */
+.main-logo-text {
+    padding: 0;
+    margin-left: 10px;
+    margin-bottom: 0px;
+    font-weight: bold;
+    font-size: 25px;
+    color: rgb(255, 255, 255);
+}
+
+/* хидер */
+.main-header-block {
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+    display: flex;
+    text-align: center;
+    align-items: center;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    padding: 25px;
+}
+
+/* основные блоки сайдер, контент */
+.main-block {
+    background: rgba(255,255,255,0.3);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 32px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.4);
+    margin: 25px;
+    margin-bottom: 0;
+    border-radius: 10px;
+    min-height:0;
+}
+
+/* футер */
+.main-footer-block {
+    height: 10px;
+    margin: 15px 25px 0px 25px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.3);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 32px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: white;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    padding: 0;
+    height:50px ;
+}
+
+/* СТИЛЬ КАРТОЧКИ СПИСКА НАЙДЕННЫХ ПОЛЬЗОВАТЕЛЕЙ */
+.user-card-element:hover {
+    border-left: 8px solid #1379bdb8;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+/* анимация выбора карточки */
+.user-card-element.selected {
+    border-left: 8px solid #1379bdb8;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+    animation: blinkColor 0.5s;
+}
+@keyframes blinkColor {
+    0% { background-color: #ffffff; }
+    50% { background-color: #ffffff9e; }
+    100% { background-color: #ffffff; }
+}
+  /* карторчка элемента списка найденных пользователей АД */
+.user-card-element {
+    margin: 10px;
+    text-align: start;
+    transition: border-left-width 0.2s ease, border-color 0.2s ease, opacity 0.4s, transform 0.2s ease;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+/* обертка карточки для анимации */
+.user-card-wrapper {
+    opacity: 0;
+    transform: scale(0.8);
+    animation: appearCard 0.5s ease-out forwards;
+}
+@keyframes appearCard {
+    to {
+      opacity: 1; /* Появление */
+      transform: scale(1); /* Нормальный размер */
+    }
+}
+
+/* загрулка когда нет данных в списке найденных пользователей АД */
+.empty-visible {
+    opacity: 0;
+    transition: opacity 0.4s ease-out;
+}
+
+/* МЭЙН КОНТЕНТ БЛОКИ */
+
