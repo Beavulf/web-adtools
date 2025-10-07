@@ -1,29 +1,27 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { useState } from "react";
 import { 
-    Button, 
     notification, 
     Space,
     Layout,
     Menu,
-    Breadcrumb,
     Popover,
     Input,
     Card,
     Empty,
-    Badge,
-    Tag,
     Flex,
-    Typography
+    Typography,
+    Collapse
 } from "antd";
 import { SettingOutlined, LogoutOutlined, SearchOutlined } from "@ant-design/icons";
 import { gql } from '@apollo/client'
 import { useMutation, useLazyQuery } from "@apollo/client/react";
 import { useAuth } from "../../context/AuthContext";
-import UserCard from "./components/UserCard";
-import UserInfo from "./components/UserInfo";
-import FooterInfo from "./components/FooterInfo";
-import TableData from "./components/TableData";
+import UserCard from "./components/user/UserCard";
+import UserInfo from "./components/user/UserInfo";
+import FooterInfo from "./components/layout/FooterInfo";
+import TableData from "./components/schedule/TableData";
+import {CustomMessageProvider} from "../../context/MessageContext";
 import "./Home.css"
 
 
@@ -62,9 +60,16 @@ const {Text, Paragraph} = Typography
 const HomePage = () => {
     const [logoutServer, {loading, error}] = useMutation(LOGOUT_USER);
     const { logout: logoutClient } = useAuth();
+    const [hiddenUserInfo, setHiddenUserInfo] = useState(false)
+
     // выбранная карточка
     const [selectedUserCard, setSelectedUserCard] = useState(null)
-
+    
+    const [tableSearchValue, setTableSearchValue] = useState("")
+    const handleTableSearch = useCallback((searchValue) => {
+        setTableSearchValue(searchValue);
+    }, []);
+    
     // уведомления
     const [api, contextHolder] = notification.useNotification();
     const openNotification = (text,type) => {
@@ -83,17 +88,26 @@ const HomePage = () => {
         const timer = setTimeout(() => setIsVisible(true), 100);
     return () => clearTimeout(timer);
     },[])
-    
-    // *****************************РАБОТА С ГРАФКЛ ЗАПРОСАМИ
+
+    const handleHiddenUserChange = useCallback((value) => {
+        // гарантируем, что React не увидит обновление состояния во время рендера TableData
+        Promise.resolve().then(() => setHiddenUserInfo(value));
+    }, []);
 
     // получение списка пользователей из LDAP
     const [getUserInfo,{data: dataUserInfo, loading: loadingUserInfo, error: errorUserInfo}] = useLazyQuery(GET_USER_LDAP);
+
+    useEffect(()=>{
+        if (errorUserInfo) {
+            openNotification(`Ошибка при попытке получения информации о пользователе: ${errorUserInfo.message}`,'error')
+        }
+    },[errorUserInfo])
     //***********************************  
 
     // выбор карточки
-    const handleSelectedCard = (cardKey) => {   
-        setSelectedUserCard(cardKey === selectedUserCard ? null : cardKey)
-    }
+    const handleSelectedCard = useCallback((cardKey) => {   
+        setSelectedUserCard(prevSelected => cardKey === prevSelected ? null : cardKey)
+    }, []);
 
     // выход из аккаунта
     const handleLogout = async () => {
@@ -160,7 +174,7 @@ const HomePage = () => {
 
             </Header>
             
-            <Layout style={{ background: 'transparent'}}>
+            <Layout style={{ background: 'transparent', height:'100%'}}>
                 {/* SIDER */}
                 <Sider className="main-block sider-scroll" width={500}
                     style={{ 
@@ -219,7 +233,7 @@ const HomePage = () => {
                                     >
                                         <UserCard 
                                             isActive={userInfo.sAMAccountName === selectedUserCard?.sAMAccountName}
-                                            key={userInfo.sAMAccountName}
+                                            // key={userInfo.sAMAccountName}
                                             fio={userInfo.cn}
                                             department={userInfo.department}
                                             description={userInfo.description}
@@ -240,28 +254,44 @@ const HomePage = () => {
                     </div>
                 </Sider>
 
-                <Content 
-                    className="main-block"
-                    style={{
-                        marginLeft: 0,
-                        transform: isVisible ? 'translateX(0)' : 'translateX(300px)',
-                        transition: 'transform 0.3s ease-out',
-                        gap:'10px',
-                        display:'flex',
-                        flexDirection:'column',
-                        padding:'10px',
-                    }}
-                >
-                    {contextHolder}
+                
+                <CustomMessageProvider>
+                    <Content 
+                        className="main-block"
+                        style={{
+                            marginLeft: 0,
+                            transform: isVisible ? 'translateX(0)' : 'translateX(300px)',
+                            transition: 'transform 0.3s ease-out',
+                            gap:'10px',
+                            display:'flex',
+                            flexDirection:'column',
+                            padding:'10px',
+                        }}
+                    >
+                        {contextHolder}
 
-                    {/* блоки с информацией о пользователе и кнопками добавления задач */}
-                    <UserInfo selectedUser={selectedUserCard}/>
-                    
-                    {/* блок с таблицами */}
-                    <Card style={{flex:1, overflow:'hidden'}}>
-                        <TableData/>
-                    </Card>
-                </Content>
+                        {/* блоки с информацией о пользователе и кнопками добавления задач */}
+                        <UserInfo 
+                            selectedUser={selectedUserCard} 
+                            hidden={hiddenUserInfo}
+                            onTableSearch={handleTableSearch}
+                        />
+
+                        <Card style={{
+                            overflow: 'auto',
+                            flex: 1,
+                            minHeight: 0,
+                        }}>
+                            <TableData 
+                                onError={(error) => { 
+                                    openNotification(`Ошибка при попытке отображения данных в таблице: ${error}`,'error')
+                                }}
+                                onHidden={handleHiddenUserChange}
+                                searchValue={tableSearchValue}
+                            />
+                        </Card>
+                    </Content>
+                </CustomMessageProvider>
 
             </Layout>
 
@@ -270,6 +300,7 @@ const HomePage = () => {
                 style={{
                     transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
                     transition: 'transform 0.3s ease-out',
+                    overflow:'hidden'
                 }}
             >
                 <FooterInfo  onError={(error) => { 

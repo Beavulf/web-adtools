@@ -9,14 +9,15 @@ import "./UserInfo.css"
 
 const {Text, Paragraph} = Typography
 
-const InfoBlock = ({selectedUser, text, title, iconSrc, helpText="-"}) => {
+const InfoBlock = React.memo(({selectedUser, text, title, iconSrc, helpText="-"}) => {
+    const content = <Paragraph copyable={!!selectedUser} style={{maxWidth:'400px'}}>{text}</Paragraph>
     return (
         <div className='block-info'>
             <img src={iconSrc} alt="ICO" style={{width:'56px', objectFit:'contain'}}/>
             <Flex vertical gap={6} style={{flexShrink:0}} className={selectedUser ? "text-fade-in" : ''}>
                 <Popover 
                     trigger={'click'} 
-                    content={<Paragraph copyable={selectedUser ? true : false} style={{maxWidth:'400px'}}>{text}</Paragraph>}
+                    content={content}
                 >
                 <Tag color="purple" style={{alignSelf:'flex-start'}}>{title}</Tag>
                 <Text  className='block-info-text-more'>
@@ -29,6 +30,6 @@ const InfoBlock = ({selectedUser, text, title, iconSrc, helpText="-"}) => {
             </Popover>
         </div>
     )
-}
+});
 
 export default InfoBlock

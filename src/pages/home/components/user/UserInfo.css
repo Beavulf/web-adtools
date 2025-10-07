@@ -1,9 +1,19 @@
 .user-info {
-    height: 300px;
     flex: 1 1 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+.user-info-container {
+    transition: height 0.2s ease-in-out;
+    height: 300px;
+    overflow: hidden;
+}
+.user-info-hidden {
+    height: 0 !important;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: height 0.2s ease-in-out;
 }
 .user-info.selected {
     animation: blinkColor 0.5s;
@@ -16,7 +26,6 @@
 /* INFO бЛОКИ */
 .text-fade-in {
     opacity: 0;
-    
     animation: textFadeBlue 0.5s forwards;
 }
 /* анмиация моршания цвета при выборе */
@@ -51,7 +60,6 @@
     box-shadow: 0 5px 12px rgba(76, 63, 63, 0.15);
     display: flex;
     align-items: center;
-    gap: 15px;
     height: 80px;
 }
 /* текст в блоке */

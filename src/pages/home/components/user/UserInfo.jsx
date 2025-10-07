@@ -11,7 +11,7 @@ import './UserInfo.css'
 
 const {Text, Paragraph} = Typography
 
-const UserInfo = ({selectedUser}) => {
+const UserInfo = React.memo(({selectedUser, hidden, onTableSearch}) => {
     const [userData, setUserData] = useState({})
     useEffect(()=>{
         if (selectedUser) {
@@ -42,23 +42,34 @@ const UserInfo = ({selectedUser}) => {
     },[selectedUser])
 
     return (
-        <Flex style={{gap:'10px'}}>
+        <Flex gap={10} className={hidden ? 'user-info-hidden' : 'user-info-container'}>
+
+            {/* блок с информацией о пользователе */}
             <Card 
                 className={selectedUser ? 'user-info selected' : 'user-info'}
                 title={
                     <div style={{display:'flex', alignItems:'center', gap:'10px',}}>
                         <img src="./Person.png" alt="icon" style={{width:'64px', objectFit:'contain'}} />
-                        <Flex vertical>
+                        <Flex vertical flex={1}>
                             <h4 className={selectedUser ? "text-fade-in" : ''}>{userData.cn}</h4>
-                            <Paragraph className={selectedUser ? "text-fade-in" : ''} copyable style={{color:'gray', fontSize:'12px', margin:0}}>{userData.distinguishedName}</Paragraph>
+                            <Paragraph 
+                                className={selectedUser ? "text-fade-in" : ''} 
+                                copyable
+                                ellipsis
+                                style={{color:'gray', fontSize:'12px', margin:0, maxWidth:'500px'}}
+                            >
+                                {userData.distinguishedName}
+                            </Paragraph>
                         </Flex>
                     </div>
                 }
-                extra={<Tag  
-                    bordered={true} 
-                    color={userData.isActive === 'ВКЛЮЧЕНА' ? 'green' : userData.isActive === '-'?'orange' :'red'}>
-                    <h4 className={selectedUser ? "text-fade-in" : ''}>{userData.isActive}</h4>
-                </Tag>}
+                extra={
+                    <Tag  
+                        bordered={true} 
+                        color={userData.isActive === 'ВКЛЮЧЕНА' ? 'green' : userData.isActive === '-'?'orange' :'red'}>
+                        <h4 className={selectedUser ? "text-fade-in" : ''}>{userData.isActive}</h4>
+                    </Tag>
+                }
             >
                 <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', width:'100%', alignItems:'stretch'}}>
                     <InfoBlock 
@@ -106,11 +117,16 @@ const UserInfo = ({selectedUser}) => {
                     />
                 </div>
             </Card>
-            <Card style={{flex:'0 0 400px', height:'300px', width:'400px'}} bodyStyle={{height: '100%', display: 'flex', flexDirection: 'column'}}>
-                <UserInfoAction/>
+
+            {/* блок с кнопками действий */}
+            <Card 
+                style={{flex:'0 0 400px', height:'300px', width:'400px'}} 
+                bodyStyle={{height: '100%', display: 'flex', flexDirection: 'column'}}
+            >
+                <UserInfoAction selectedUser={selectedUser} onTableSearch={onTableSearch}/>
             </Card>
         </Flex>
     )
-}
+});
 
 export default UserInfo;

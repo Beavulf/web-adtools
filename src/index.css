@@ -16,7 +16,7 @@
 * {
   box-sizing: border-box;
 }
-htlm, bodt, root {
+html, bodt, root {
   margin: 0;
   padding: 0;
   height: 100%;

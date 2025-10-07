@@ -13,7 +13,7 @@ import { useAuth } from "../../context/AuthContext";
 import { gql } from '@apollo/client'
 import { useMutation } from "@apollo/client/react";
 import { useNavigate } from "react-router-dom";
-import { LoginOutlined } from "@ant-design/icons";
+import { LoginOutlined, UserOutlined, LockOutlined } from "@ant-design/icons";
 
 // запрос на атворизацию пользователя и получение токена
 const AUTH_USER = gql`
@@ -110,7 +110,7 @@ const LoginPage = () => {
   return (
     <div 
       style={{
-        height:'100vh', backgroundColor:'#a9f5f5', width:"100vw",
+        height: '100vh', backgroundColor: 'rgb(169, 205, 245)', width: "100vw",
         backgroundImage: 'url(/BGLogin.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -147,7 +147,7 @@ const LoginPage = () => {
               validateDebounce={500} 
               rules={[{ required: true, message: "Введите Логин минимум 6 символов", min:6 }]}
             >
-              <Input placeholder="User name" />
+              <Input placeholder="User name"/>
             </Form.Item>
             <Form.Item name="password" rules={[{ required: true, message: "Введите пароль" }]}>
               <Input.Password placeholder="Пароль" />

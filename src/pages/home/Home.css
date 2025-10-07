@@ -1,18 +1,6 @@
-.sider-scroll {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    scrollbar-color: #fef5f5bb transparent;
-}
-.sider-scroll::-webkit-scrollbar {
-    width: 6px;
-}
-.sider-scroll::-webkit-scrollbar-track {
-    background: transparent;
-}
-.sider-scroll::-webkit-scrollbar-thumb {
-    background: #1e40d9;
-    border-radius: 3px;
+/* Глобальные стили для всех скроллов */
+* {
+    scrollbar-color: #64099ca6 #fef5f5bb;
 }
 
 /* ПЕРЕОПРЕДЕЛЕНИЕ СТИЛЕЙ КОМПОНЕНТОВ */
@@ -70,6 +58,8 @@
     border-radius: 12px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.15);
     padding: 25px;
+    height: 65px;
+    min-height: 0;
 }
 
 /* основные блоки сайдер, контент */
@@ -130,7 +120,7 @@
 .user-card-wrapper {
     opacity: 0;
     transform: scale(0.8);
-    animation: appearCard 0.5s ease-out forwards;
+    animation: appearCard 0.2s ease-out forwards;
 }
 @keyframes appearCard {
     to {
@@ -146,4 +136,24 @@
 }
 
 /* МЭЙН КОНТЕНТ БЛОКИ */
+
+/* Стили для прокрутки таблицы */
+.ant-table-body {
+    scrollbar-color: #c6a1e4bb transparent;
+}
+.ant-table-body::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.ant-table-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+.ant-table-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+.ant-table-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
 
