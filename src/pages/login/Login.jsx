@@ -29,7 +29,7 @@ const LoginPage = () => {
   const [auth, {loading}] = useMutation(AUTH_USER)
   const [api, contextHolder] = notification.useNotification();
   const navigate = useNavigate();
-  const [isRembmerMe, setIsRembmerMe] = useState(false)
+  const [isRememberMe, setIsRememberMe] = useState(false)
 
   // для срабатывания анимации появления
   const [isVisible, setIsVisible] = useState(false);
@@ -45,7 +45,7 @@ const LoginPage = () => {
   useEffect(() => {
     const check = localStorage.getItem('isRembmerMe')
     if (check) {
-      setIsRembmerMe(true)
+      setIsRememberMe(true)
     };
   },[])
 
@@ -55,12 +55,12 @@ const LoginPage = () => {
       localStorage.removeItem('isRembmerMe')
       localStorage.removeItem('username')
     }
-    setIsRembmerMe(e.target.checked)
+    setIsRememberMe(e.target.checked)
   }
 
   // устанавливаем и сохраняем данные пользователя в localStorage
   const setRememberMe = (username) => {
-    if (isRembmerMe) {
+    if (isRememberMe) {
       localStorage.setItem('isRembmerMe', true)
       localStorage.setItem('username', username)
     }
@@ -164,7 +164,7 @@ const LoginPage = () => {
               </Button>
             </Form.Item>
             <Form.Item style={{ textAlign: "right", margin:0 }}>
-              <Checkbox checked={isRembmerMe} onChange={(e) => isRememberChange(e)}>Запомнить меня</Checkbox>
+              <Checkbox checked={isRememberMe} onChange={(e) => isRememberChange(e)}>Запомнить меня</Checkbox>
               <Popover title="Важно" trigger={"hover"} content={<p>Сохраняет и подставляет ваш Лоигн автоматически </p>}>
                 <a href="#">?</a>
               </Popover>
