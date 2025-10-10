@@ -135,6 +135,7 @@ const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
                 footer={null}
                 destroyOnHidden
                 width={1500}
+                style={{top:'20px'}}
             >
                 <UserArchiveHistory 
                     sAMAccountName={selectedUser?.sAMAccountName}

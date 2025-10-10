@@ -11,7 +11,6 @@ import {
     Empty,
     Flex,
     Typography,
-    Collapse
 } from "antd";
 import { SettingOutlined, LogoutOutlined, SearchOutlined } from "@ant-design/icons";
 import { gql } from '@apollo/client'
