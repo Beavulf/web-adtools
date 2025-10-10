@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   Form, 
   Input, 
@@ -29,42 +29,43 @@ const LoginPage = () => {
   const [auth, {loading}] = useMutation(AUTH_USER)
   const [api, contextHolder] = notification.useNotification();
   const navigate = useNavigate();
-  const [isRembmerMe, setIsRembmerMe] = useState(false)
+  const [isRememberMe, setIsRememberMe] = useState(false)
 
   // для срабатывания анимации появления
   const [isVisible, setIsVisible] = useState(false);
+
   useEffect(() => {
     setIsVisible(true);
     document.title = "Авторизация"
+    
+    // установка состояния авторизации при входе на страницу
+    const rememberMe = localStorage.getItem('isRembmerMe')
+    if (rememberMe) {
+      setIsRememberMe(true)
+    };
+
     return () => {
       document.title = "-- Web AD-Tools --"
     }
-  }, []);
-
-  // установка состояния авторизации при входе на страницу
-  useEffect(() => {
-    const check = localStorage.getItem('isRembmerMe')
-    if (check) {
-      setIsRembmerMe(true)
-    };
-  },[])
+  }, []); 
 
   // удаляем сохраненые данные если убрали галочку "Запомнить меня"
-  const isRememberChange = (e) => {
+  const handleRememberMeChange = useCallback((e) => {
+    setIsRememberMe(e.target.checked)
+
     if (!e.target.checked) {
       localStorage.removeItem('isRembmerMe')
       localStorage.removeItem('username')
     }
-    setIsRembmerMe(e.target.checked)
-  }
+  },[]);
 
   // устанавливаем и сохраняем данные пользователя в localStorage
-  const setRememberMe = (username) => {
-    if (isRembmerMe) {
+  const setRememberMe = useCallback((username) => {
+    if (isRememberMe) {
       localStorage.setItem('isRembmerMe', true)
       localStorage.setItem('username', username)
     }
-  }
+  },[isRememberMe]);
 
   // вызов уведомления
   const openNotification = (text,type) => {
@@ -77,6 +78,20 @@ const LoginPage = () => {
       type,
     })
   }
+
+  const handleAuthError = useCallback((error) => {
+    let message = 'Произошла неизвестная ошибка';
+    
+    if (error.message === 'Failed to fetch') {
+      message = 'Ошибка соединения с сервером. Проверьте подключение к интернету.';
+    } else if (error.message === 'Unauthorized') {
+      message = 'Неверный логин или пароль.';
+    } else if (error.graphQLErrors?.length > 0) {
+      message = error.graphQLErrors[0].message;
+    }
+    
+    openNotification(message, 'error');
+  }, []);
 
   // функция на сабмит формы  - авторизация и получение токена с сервера
   const onFinish = async (values) => {
@@ -95,15 +110,7 @@ const LoginPage = () => {
       navigate('/main') 
     }
     catch(err) {
-      if (err.message === 'Failed to fetch') {
-        openNotification(`Ошибка соединения с сервером (${err.message}).`, 'error')
-        return;
-      }
-      if (err.message === 'Unauthorized') {
-        openNotification(`Неверный логин или пароль (${err.message}).`, 'error')
-        return;
-      }
-      openNotification(`Ошибка при попытке входа (${err.message}).`, 'error')
+      handleAuthError(err);
     }
   };
 
@@ -145,7 +152,7 @@ const LoginPage = () => {
               hasFeedback 
               name="username" 
               validateDebounce={500} 
-              rules={[{ required: true, message: "Введите Логин минимум 6 символов", min:6 }]}
+              rules={[{ required: true, message: "Введите логин", min:6 }]}
             >
               <Input placeholder="User name"/>
             </Form.Item>
@@ -164,7 +171,9 @@ const LoginPage = () => {
               </Button>
             </Form.Item>
             <Form.Item style={{ textAlign: "right", margin:0 }}>
-              <Checkbox checked={isRembmerMe} onChange={(e) => isRememberChange(e)}>Запомнить меня</Checkbox>
+              <Checkbox checked={isRememberMe} onChange={(e) => handleRememberMeChange(e)}>
+                Запомнить меня
+              </Checkbox>
               <Popover title="Важно" trigger={"hover"} content={<p>Сохраняет и подставляет ваш Лоигн автоматически </p>}>
                 <a href="#">?</a>
               </Popover>

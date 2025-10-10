@@ -1,29 +1,23 @@
 import React from "react";
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    const token = localStorage.getItem("token");
     return !!localStorage.getItem("token");
   });
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      setIsAuthenticated(true);  // Если токен есть, считаем авторизованным
-    }
-  }, []);
-
-  const login = (token) => {
+  const login = useCallback((token) => {
     localStorage.setItem("token", token);
     setIsAuthenticated(true);
-  };
+  },[]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("token");
     setIsAuthenticated(false);
-  };
+  },[]);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, login, logout }}>

@@ -85,7 +85,7 @@ const HomePage = () => {
     const [isVisible, setIsVisible] = useState(false)
     useEffect(()=>{
         const timer = setTimeout(() => setIsVisible(true), 100);
-    return () => clearTimeout(timer);
+        return () => clearTimeout(timer);
     },[])
 
     const handleHiddenUserChange = useCallback((value) => {
