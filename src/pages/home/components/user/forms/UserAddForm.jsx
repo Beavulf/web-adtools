@@ -12,9 +12,10 @@ import {
     Tag
 } from "antd"
 import { useMutation } from "@apollo/client/react";
-import { FieldTimeOutlined, FileTextOutlined, SolutionOutlined, ReadOutlined, UserOutlined } from "@ant-design/icons";
+import { FieldTimeOutlined, FileTextOutlined, SolutionOutlined, ReadOutlined } from "@ant-design/icons";
 import { GET_SCHEDULES, CREATE_SCHEDULE } from "../../../../../query/GqlQuery";
 import { useCustomMessage } from "../../../../../context/MessageContext";
+import CardUserInfo from "./CardUserInfo";
 
 const {RangePicker} = DatePicker
 
@@ -64,34 +65,7 @@ const UserAddForm = React.memo(({selectedUser, handleModalClose}) => {
             disabled={loadingSchedule}
             style={{backgroundColor:'rgba(170, 210, 235, 0.17)', padding:'10px', borderRadius:'8px'}}
         >
-            <Card
-                title={<h4>Выбранный сотрудник <UserOutlined/></h4>}
-                style={{
-                    background: 'linear-gradient(90deg, #e5d7ea 0%, #d1e7fa 50%, #d7f5e5 100%)'
-                }}
-                extra={<Tag color="blue">{selectedUser?.department}</Tag>}
-            >
-                <Flex gap={10}>
-                    <Form.Item
-                        label={null}
-                        name="fio"
-                        rules={[{ required: true, message: 'Введите ФИО' }]}
-                        style={{flex:1, marginBottom:10}}
-                        initialValue={selectedUser?.cn}
-                    >
-                        <Input readOnly variant="filled"/>
-                    </Form.Item>
-                    <Form.Item
-                        style={{flex:0.4, marginBottom:10}}
-                        name="login"
-                        label={null}
-                        rules={[{ required: true, message: 'Введите логин' }]}
-                        initialValue={selectedUser?.sAMAccountName}
-                    >
-                        <Input readOnly variant="filled"/>
-                    </Form.Item>
-                </Flex>
-            </Card>
+            <CardUserInfo selectedUser={selectedUser}/>
             <Form.Item
                 label={<h4>Куда <SolutionOutlined/></h4>}
                 layout="vertical"

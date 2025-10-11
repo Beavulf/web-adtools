@@ -1,22 +1,27 @@
-import React, { useEffect, useState, useCallback, useMemo, useDeferredValue } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useDeferredValue, startTransition, Suspense } from "react";
 import {
     Flex,
     Input,
     Table,
     Button,
     Popover,
+    Radio
 } from 'antd'
 import { SyncOutlined, ExpandOutlined, CompressOutlined } from "@ant-design/icons";
 import { useQuery } from "@apollo/client/react";
 import scheduleColumns from "./ScheduleColumns";
 import { GET_SCHEDULES } from "../../../../query/GqlQuery";
+import UserReacllInfo from "./UserRecallInfo";
 
 const {Search} = Input
 
 const TableData = React.memo(({onError, onHidden, searchValue})=> {
     const [confirmTextValue, setConfirmTextValue] = useState("");
     const [hiddenUserInfo, setHiddenUserInfo] = useState(false)
+    const [filteredSchedules, setFilteredSchedules] = useState([]);
+   
     const deferredConfirmValue = useDeferredValue(confirmTextValue);
+    
     // получение списка задач из БД
     const {data: dataSchedules, loading: loadingSchedules, error: errorSchedules, refetch} = useQuery(GET_SCHEDULES, {
         pollInterval: 1200000,
@@ -24,11 +29,10 @@ const TableData = React.memo(({onError, onHidden, searchValue})=> {
     });
 
     useEffect(() => {
-        if (searchValue) {
-            setConfirmTextValue(searchValue);
-        } else {
-            setConfirmTextValue("");
-        }
+        startTransition(() => {
+          if (searchValue) setConfirmTextValue(searchValue);
+          else setConfirmTextValue("");
+        });
     }, [searchValue]);
 
 
@@ -46,34 +50,40 @@ const TableData = React.memo(({onError, onHidden, searchValue})=> {
         });
     },[onHidden])
 
-    const handleSearch = useCallback((value) => {
-        setConfirmTextValue(value);
+    const handleSearch = useCallback(value => {
+        startTransition(() => setConfirmTextValue(value));
     }, []);
 
     // фильтруем данные
-    const filteredSchedules = useMemo(() => {
-        if (!dataSchedules?.getSchedules) return [];
-        if (!deferredConfirmValue.trim()) return dataSchedules.getSchedules;
-        
-        const searchLower = deferredConfirmValue.toLowerCase();
-        return dataSchedules.getSchedules.filter(obj =>
-            ['fio', 'login', 'order', 'createdAt', 'updatedAt', 'description', 'startDate', 'endDate'].some(
-                key => {
-                    const value = obj[key];
-                    return value && String(value).toLowerCase().includes(searchLower);
-                }
-            )
-        );
-    }, [dataSchedules, deferredConfirmValue]);
+    useEffect(() => {
+        if (!dataSchedules?.getSchedules) return;
+        const handler = setTimeout(() => {
+          if (!deferredConfirmValue.trim()) {
+            setFilteredSchedules(dataSchedules.getSchedules);
+          } else {
+            const searchLower = deferredConfirmValue.toLowerCase();
+            const filtered = dataSchedules.getSchedules.filter(obj =>
+              ['fio', 'login', 'order', 'createdAt', 'updatedAt', 'description', 'startDate', 'endDate']
+                .some(key => {
+                  const value = obj[key];
+                  return value && String(value).toLowerCase().includes(searchLower);
+                })
+            );
+            setFilteredSchedules(filtered);
+          }
+        }, 0);
+        return () => clearTimeout(handler);
+      }, [dataSchedules, deferredConfirmValue]);
     // мемоизируем колонки таблицы
     const memoizedColumns = useMemo(() => scheduleColumns, []);
-
+      
     return (
         <Flex vertical gap={5} style={{minHeight:0, transition:'all 0.3s ease-out', height:'100%'}}>
             <Flex gap={5}>
                 <Popover content={<span>Строк в таблице</span>}>
                     <Button type="" style={{color:'gray'}}>{filteredSchedules.length}</Button>
                 </Popover>
+                
                 <Search 
                     placeholder="Поиск по ФИО, логину, датам (гггг-мм-дд), приказу, описанию..."
                     onSearch={handleSearch}
@@ -97,14 +107,20 @@ const TableData = React.memo(({onError, onHidden, searchValue})=> {
             <div style={{
                 overflow:'auto',
             }}>
-                <Table
-                    pagination={false}
-                    dataSource={filteredSchedules}
-                    columns={memoizedColumns}
-                    size="small"
-                    rowKey={'id'}
-                    loading={loadingSchedules}
-                />
+                <Suspense>
+                    <Table
+                        pagination={false}
+                        dataSource={filteredSchedules}
+                        columns={memoizedColumns}
+                        size="small"
+                        rowKey={'id'}
+                        loading={loadingSchedules}
+                        expandable={{
+                            expandedRowRender: (record) => <UserReacllInfo record={record}/>,
+                            rowExpandable: record => record.isRecall === true,
+                        }}
+                    />
+                </Suspense>
             </div>
         </Flex>
     )

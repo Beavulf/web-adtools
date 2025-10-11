@@ -1,19 +1,30 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useState } from "react";
 import {
     Flex,
     Button,
     Popover,
     Popconfirm,
+    Modal
 } from 'antd'
 import { useMutation } from "@apollo/client/react";
 import { DeleteOutlined, FileZipOutlined, HistoryOutlined } from "@ant-design/icons";
 import { GET_SCHEDULES, DELETE_SCHEDULE, ARCHIVE_SCHEDULE} from "../../../../query/GqlQuery";
 import { useCustomMessage } from "../../../../context/MessageContext";
+import RecallModal from "./RecallModal";
 
 const RecordAction = React.memo(({record}) => {
-    const {msgSuccess, msgError, msgInfo} = useCustomMessage()
+    const {msgSuccess, msgError} = useCustomMessage()
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleModalOpen = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleModalClose = () => {
+        setIsModalOpen(false);
+    };
     
-    const [delelteScheduele, { loading: loadingDeleteSchedule, error: errorDeleteSchedule }] = useMutation(DELETE_SCHEDULE,{
+    const [deleteSchedule, { loading: loadingDeleteSchedule, error: errorDeleteSchedule }] = useMutation(DELETE_SCHEDULE,{
         refetchQueries: [
             { query: GET_SCHEDULES }
         ]
@@ -23,38 +34,43 @@ const RecordAction = React.memo(({record}) => {
             { query: GET_SCHEDULES }
         ]
     });
-    
-    useEffect(() => {
-        if (errorDeleteSchedule) {
-            msgError(`Ошибка при удалении задачи: ${errorDeleteSchedule.message}`);
-        }
-    },[errorDeleteSchedule])
 
-    useEffect(() => {
-        if (errorArchiveSchedule) {
-            msgError(`Ошибка при архивировании задачи: ${errorArchiveSchedule.message}`);
-        }
-    },[errorArchiveSchedule])
-
+    // подтверждение удаления записи без арзивации
     const confirmDelete = useCallback(async () => {
-        msgInfo('Удаление записи')
-        await delelteScheduele({ variables: { id: record.id } });
-    }, [record, delelteScheduele]);
+        try {
+            await deleteSchedule({ variables: { id: record.id } });
+            msgSuccess('Удаление записи')
+        }
+        catch(error) {
+            msgError(`Ошибка при удалении: ${error.message}`);
+        }
+    }, [record.id, deleteSchedule, msgSuccess, msgError]);
 
+    // подтверждение архивации записи и удаления из расписания
     const confirmArchive = useCallback(async () => {
-        msgSuccess(`Запись ${record.cn} отправлена в архив и удалена из расписания`)
-        await archiveSchedule({ 
-            variables: { 
-                id: record.id, 
-                shouldArchiveRecall: false 
-            } 
-        });
-    }, [record, archiveSchedule]);
+        try {
+            await archiveSchedule({ 
+                variables: { 
+                    id: record.id, 
+                    shouldArchiveRecall: false 
+                } 
+            });
+            msgSuccess(`Запись отправлена в архив и удалена из расписания`)
+        }
+        catch(error) {
+            msgError(`Ошибка при архивировании: ${error.message}`);
+        }
+    }, [record, archiveSchedule, msgSuccess, msgError]);
 
     return (
         <Flex gap={1}>
             <Popover content={<span>Отозвать сотрудника</span>}>
-                <Button size="middle" icon={<HistoryOutlined />} style={{color:'green'}}/>
+                <Button 
+                    size="middle" 
+                    icon={<HistoryOutlined />} 
+                    style={{color:'green'}}
+                    onClick={handleModalOpen}
+                />
             </Popover>
             <Popover content={<span>Архивировать запись и удалить из расписания</span>}>
                 <Popconfirm
@@ -79,6 +95,8 @@ const RecordAction = React.memo(({record}) => {
                 </Popconfirm>
             </Popover>
             
+            <RecallModal isOpen={isModalOpen} onCancel={handleModalClose} record={record}/>
+
         </Flex>
     )
 });

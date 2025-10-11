@@ -14,7 +14,14 @@ import scheduleColumns from "../../schedule/ScheduleColumns";
 import { useCustomMessage } from "../../../../../context/MessageContext";
 
 const {Search} = Input
-const {Text, Paragraph} = Typography
+const {Text} = Typography
+
+const styleInfoBlock = {
+    borderRadius:'8px', 
+    padding:'5px', 
+    backgroundColor:'rgba(243, 243, 243, 0.32)',
+    flex:1
+}
 
 const UserArchiveHistory = React.memo(({sAMAccountName})=>{
     const [confirmTextValue, setConfirmTextValue] = useState("");
@@ -23,7 +30,6 @@ const UserArchiveHistory = React.memo(({sAMAccountName})=>{
 
     const [fetchArchiveSchedules, { data: dataArchiveSchedules, loading: loadingArchiveSchedules, error: errorArchiveSchedules }] 
     = useLazyQuery(GET_ARCHIVE_SCHEDULES, {
-        
         fetchPolicy: 'cache-and-network',
     });
 
@@ -38,76 +44,21 @@ const UserArchiveHistory = React.memo(({sAMAccountName})=>{
         });
         return days.reduce((a, b) => a + b, 0);
     }, []);
-    
-    const allCountOtpysk = useMemo(() => {
-        if (!dataArchiveSchedules?.getArchiveSchedules) return 0;
-        return dataArchiveSchedules.getArchiveSchedules.filter(obj => obj.type === 'OTPYSK').length;
-    }, [dataArchiveSchedules]);
 
-    const allTimeInOtpysk = useMemo(() => {
-        if (!dataArchiveSchedules?.getArchiveSchedules) return 0;
-        const otpyska = dataArchiveSchedules.getArchiveSchedules.filter(obj => obj.type === 'OTPYSK')
-        return getTotalDays(otpyska)
-    },[dataArchiveSchedules])
-    // Расчет количества и дней для всех типов отпусков
-    const allCountStazhirovka = useMemo(() => {
-        if (!dataArchiveSchedules?.getArchiveSchedules) return 0;
-        return dataArchiveSchedules.getArchiveSchedules.filter(obj => obj.type === 'STAJIROVKA').length;
-    }, [dataArchiveSchedules]);
-
-    const allTimeInStazhirovka = useMemo(() => {
-        if (!dataArchiveSchedules?.getArchiveSchedules) return 0;
-        const stazhirovki = dataArchiveSchedules.getArchiveSchedules.filter(obj => obj.type === 'STAJIROVKA');
-        return getTotalDays(stazhirovki)
-    }, [dataArchiveSchedules]);
-
-    const allCountProdlenieOtpyska = useMemo(() => {
-        if (!dataArchiveSchedules?.getArchiveSchedules) return 0;
-        return dataArchiveSchedules.getArchiveSchedules.filter(obj => obj.type === 'PRODLENIE_OTPYSKA').length;
-    }, [dataArchiveSchedules]);
-
-    const allTimeInProdlenieOtpyska = useMemo(() => {
-        if (!dataArchiveSchedules?.getArchiveSchedules) return 0;
-        const prodleniya = dataArchiveSchedules.getArchiveSchedules.filter(obj => obj.type === 'PRODLENIE_OTPYSKA');
-        return getTotalDays(prodleniya)
-    }, [dataArchiveSchedules]);
-
-    const allCountKomandirovka = useMemo(() => {
-        if (!dataArchiveSchedules?.getArchiveSchedules) return 0;
-        return dataArchiveSchedules.getArchiveSchedules.filter(obj => obj.type === 'KOMANDIROVKA').length;
-    }, [dataArchiveSchedules]);
-
-    const allTimeInKomandirovka = useMemo(() => {
-        if (!dataArchiveSchedules?.getArchiveSchedules) return 0;
-        const komandirovki = dataArchiveSchedules.getArchiveSchedules.filter(obj => obj.type === 'KOMANDIROVKA');
-        return getTotalDays(komandirovki)
-    }, [dataArchiveSchedules]);
-
-    const allCountUcheba = useMemo(() => {
-        if (!dataArchiveSchedules?.getArchiveSchedules) return 0;
-        return dataArchiveSchedules.getArchiveSchedules.filter(obj => obj.type === 'UCHEBA').length;
-    }, [dataArchiveSchedules]);
-
-    const allTimeInUcheba = useMemo(() => {
-        if (!dataArchiveSchedules?.getArchiveSchedules) return 0;
-        const ucheba = dataArchiveSchedules.getArchiveSchedules.filter(obj => obj.type === 'UCHEBA');
-        return getTotalDays(ucheba)
-    }, [dataArchiveSchedules]);
-
-    const allCountDekret = useMemo(() => {
-        if (!dataArchiveSchedules?.getArchiveSchedules) return 0;
-        return dataArchiveSchedules.getArchiveSchedules.filter(obj => obj.type === 'DEKRET').length;
-    }, [dataArchiveSchedules]);
-
-    const allTimeInDekret = useMemo(() => {
-        if (!dataArchiveSchedules?.getArchiveSchedules) return 0;
-        const dekrety = dataArchiveSchedules.getArchiveSchedules.filter(obj => obj.type === 'DEKRET');
-        return getTotalDays(dekrety)
-    }, [dataArchiveSchedules]);
+    // поулчение статистики по всем типам
+    const statsByType = useMemo(() => {
+        if (!dataArchiveSchedules?.getArchiveSchedules) return {};
+        const byType = {};
+        for (const type of ['OTPYSK','STAJIROVKA','DEKRET','UCHEBA','PRODLENIE_OTPYSKA','KOMANDIROVKA']) {
+            const items = dataArchiveSchedules.getArchiveSchedules.filter(obj => obj.type === type);
+            byType[type] = { totalCount: items.length, totalDays: getTotalDays(items) };
+        }
+        return byType;
+    }, [dataArchiveSchedules, getTotalDays]);
 
     useEffect(()=>{
         fetchArchiveSchedules({variables: {filter: {login: {contains: sAMAccountName}}}});
-    },[sAMAccountName])
+    },[])
 
     useEffect(() => {
         if (errorArchiveSchedules) msgError(errorArchiveSchedules?.message);
@@ -156,29 +107,29 @@ const UserArchiveHistory = React.memo(({sAMAccountName})=>{
                 </Popover>
             </Flex>
             <Flex gap={10} justify="space-between">
-                <Flex align="center" vertical gap={2} style={{ borderRadius:'8px', padding:'5px', backgroundColor:'rgba(225, 224, 221, 0.17)'}}>
-                    <Text>Всего выходов в отпуск - {allCountOtpysk}</Text>
-                    <Text>дней в отпуске - {allTimeInOtpysk}</Text>
+                <Flex align="center" vertical gap={2} style={styleInfoBlock}>
+                    <Text>Выходов в отпуск - {statsByType.OTPYSK?.totalCount || 0}</Text>
+                    <Text>дней в отпуске - {statsByType.OTPYSK?.totalDays || 0}</Text>
                 </Flex>
-                <Flex align="center" vertical gap={2} style={{ borderRadius:'8px', padding:'5px', backgroundColor:'rgba(225, 224, 221, 0.17)'}}>
-                    <Text>Всего выходов на стажировку - {allCountStazhirovka}</Text>
-                    <Text>дней в стажировке - {allTimeInStazhirovka}</Text>
+                <Flex align="center" vertical gap={2} style={styleInfoBlock}>
+                    <Text>Выходов на стажировку - {statsByType.STAJIROVKA?.totalCount || 0}</Text>
+                    <Text>дней в стажировке - {statsByType.STAJIROVKA?.totalDays || 0}</Text>
                 </Flex>
-                <Flex align="center" vertical gap={2} style={{ borderRadius:'8px', padding:'5px', backgroundColor:'rgba(225, 224, 221, 0.17)'}}>
-                    <Text>Всего выходов в декрет - {allCountDekret}</Text>
-                    <Text>дней в декрете - {allTimeInDekret}</Text>
+                <Flex align="center" vertical gap={2} style={styleInfoBlock}>
+                    <Text>Выходов в декрет - {statsByType.DEKRET?.totalCount || 0}</Text>
+                    <Text>дней в декрете - {statsByType.DEKRET?.totalDays || 0}</Text>
                 </Flex>
-                <Flex align="center" vertical gap={2} style={{ borderRadius:'8px', padding:'5px', backgroundColor:'rgba(225, 224, 221, 0.17)'}}>
-                    <Text>Всего выходов на учебу - {allCountUcheba}</Text>
-                    <Text>дней в учебе - {allTimeInUcheba}</Text>
+                <Flex align="center" vertical gap={2} style={styleInfoBlock}>
+                    <Text>Выходов на учебу - {statsByType.UCHEBA?.totalCount || 0}</Text>
+                    <Text>дней в учебе - {statsByType.UCHEBA?.totalDays || 0}</Text>
                 </Flex>
-                <Flex align="center" vertical gap={2} style={{ borderRadius:'8px', padding:'5px', backgroundColor:'rgba(225, 224, 221, 0.17)'}}>
-                    <Text>Всего продлений отпуска - {allCountProdlenieOtpyska}</Text>
-                    <Text>дней продления - {allTimeInProdlenieOtpyska}</Text>
+                <Flex align="center" vertical gap={2} style={styleInfoBlock}>
+                    <Text>Продлений отпуска - {statsByType.PRODLENIE_OTPYSKA?.totalCount || 0}</Text>
+                    <Text>дней продления - {statsByType.PRODLENIE_OTPYSKA?.totalDays || 0}</Text>
                 </Flex>
-                <Flex align="center" vertical gap={2} style={{ borderRadius:'8px', padding:'5px', backgroundColor:'rgba(225, 224, 221, 0.17)'}}>
-                    <Text>Всего выходов в командировку - {allCountKomandirovka}</Text>
-                    <Text>дней в командировке - {allTimeInKomandirovka}</Text>
+                <Flex align="center" vertical gap={2} style={styleInfoBlock}>
+                    <Text>Выходов в командировку - {statsByType.KOMANDIROVKA?.totalCount || 0}</Text>
+                    <Text>дней в командировке - {statsByType.KOMANDIROVKA?.totalDays || 0}</Text>
                 </Flex>
             </Flex>
             <Table

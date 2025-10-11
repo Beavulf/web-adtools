@@ -18,7 +18,7 @@ const GET_SCHEDULES = gql`
         updatedAt
         createdBy
         updatedBy
-        recall
+        isRecall
     }
 }
 `;
@@ -41,11 +41,7 @@ const ARCHIVE_SCHEDULE = gql`
     }
 `;
 
-const CREATE_ONETIME_TASK = gql`
-    mutation CreateOneTimeTask($data: OneTimeCreateInput!) {
-        craeteOneTime(data: $data)
-    }
-`;
+
 
 const GET_ARCHIVE_SCHEDULES = gql`
     query GetArchiveSchedules($filter: ScheduleFilterInput!) {
@@ -64,7 +60,7 @@ const GET_ARCHIVE_SCHEDULES = gql`
         updatedAt
         createdBy
         updatedBy
-        recall
+        isRecall
     }
 }
 `;
@@ -74,6 +70,5 @@ export {
     CREATE_SCHEDULE, 
     DELETE_SCHEDULE, 
     ARCHIVE_SCHEDULE, 
-    CREATE_ONETIME_TASK,
     GET_ARCHIVE_SCHEDULES
 };

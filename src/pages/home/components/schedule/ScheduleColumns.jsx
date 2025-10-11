@@ -98,7 +98,11 @@ const scheduleColumns = [
         ],
         onFilter: (value, record) => record.status === value,
         render: (text, record) =>
-            text ? <Tag color="green" key={`status-${record.id}`}>Выполняется</Tag> : <Tag color="orange" key={`status-${record.id}`}>Ожидание</Tag>,
+            text ? 
+            <Tag color="green" key={`status-${record.id}`}>
+                Выполняется
+            </Tag> : 
+            <Tag color="orange" key={`status-${record.id}`}>Ожидание</Tag>,
         width: 100,
     },
     {
@@ -151,14 +155,18 @@ const scheduleColumns = [
     },
     {
         title: 'Отзыв',
-        dataIndex: 'recall',
-        key: 'recall',
-        render: (text) => (text ? 'да' : 'нет'),
+        dataIndex: 'isRecall',
+        key: 'isRecall',
         filters: [
-            { text: 'да', value: true },
-            { text: 'нет', value: null },
+            { text: 'отозван', value: true },
+            { text: 'нет', value: false },
         ],
-        onFilter: (value, record) => record.recall === value,
+        onFilter: (value, record) => record.isRecall === value,
+        render: (text) => (
+            <Tag color={text ? 'orange' : 'blue'}>
+                {text ? 'отозван' : 'нет'}
+            </Tag>
+        ),
         width: 78,
     },
     {

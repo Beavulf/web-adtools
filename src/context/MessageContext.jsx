@@ -1,23 +1,35 @@
 import React from "react";
 import { createContext, useContext } from "react";
 import { 
-    message,
+    notification
 } from "antd"
 const MessageContext = createContext();
 
 export const CustomMessageProvider = ({ children }) => {
-    const [messageApi, contextHolder] = message.useMessage();
+    // const [messageApi, contextHolder] = message.useMessage();
+    const [api, contextHolder] = notification.useNotification();
+
+    const openNotification = (text,type) => {
+        api.open({
+            message: 'Оповещение',
+            description: text,
+            showProgress: true,
+            pauseOnHover: true,
+            placement: 'bottom',
+            type
+        })
+    }
 
     const msgSuccess = (text) => {
-        messageApi.success(text);
+        openNotification(text,'success');
     };
 
     const msgError = (text) => {
-        messageApi.error(text);
+        openNotification(text,'error');
     };
 
     const msgInfo = (text) => {
-        messageApi.info(text);
+        openNotification(text,'info');
     };
 
     return (

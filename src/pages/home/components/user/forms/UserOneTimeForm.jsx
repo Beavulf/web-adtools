@@ -12,9 +12,11 @@ import {
     Button
 } from "antd"
 import { useMutation } from "@apollo/client/react";
-import { UserOutlined, ScheduleOutlined, InteractionOutlined } from "@ant-design/icons";
-import { GET_SCHEDULES, CREATE_ONETIME_TASK } from "../../../../../query/GqlQuery";
+import { ScheduleOutlined, InteractionOutlined } from "@ant-design/icons";
+import { GET_SCHEDULES } from "../../../../../query/GqlQuery";
+import { CREATE_ONETIME_TASK } from "../../../../../query/OneTimeQuery";
 import { useCustomMessage } from "../../../../../context/MessageContext";
+import CardUserInfo from "./CardUserInfo";
 
 const UserOneTimeForm = React.memo(({selectedUser, handleModalClose}) => {
 
@@ -24,15 +26,8 @@ const UserOneTimeForm = React.memo(({selectedUser, handleModalClose}) => {
     const [createOneTime, { loading: loadingOneTime, error: errorOneTime }] = useMutation(CREATE_ONETIME_TASK, {
         refetchQueries: [
             { query: GET_SCHEDULES }
-        ]
+        ],
     });
-
-    // отображение ошибке при ее появлении
-    useEffect(() => {
-        if (errorOneTime) {
-            msgError(`Ошибка при добавлении задачи: ${errorOneTime.message}`);
-        }
-    },[errorOneTime])
 
     // submit перация формы
     const onFinish = useCallback(
@@ -52,7 +47,7 @@ const UserOneTimeForm = React.memo(({selectedUser, handleModalClose}) => {
                 handleModalClose();
             }
             catch(err) {
-                msgError(`Ошибка при добавлении задачи: ${err.message}`);
+                msgError(`Ошибка при добавлении задачи: ${err}`);
             }
         },
         [createOneTime, handleModalClose]
@@ -66,34 +61,7 @@ const UserOneTimeForm = React.memo(({selectedUser, handleModalClose}) => {
             layout="vertical"
             style={{backgroundColor:'rgba(170, 210, 235, 0.17)', padding:'10px', borderRadius:'8px'}}
         >
-            <Card
-                title={<h4>Выбранный сотрудник <UserOutlined/></h4>}
-                style={{
-                    background: 'linear-gradient(90deg, #e5d7ea 0%, #d1e7fa 50%, #d7f5e5 100%)',
-                    marginBottom:'10px'
-                }}
-                extra={<Tag color="blue">{selectedUser?.department}</Tag>}
-            >
-                <Flex gap={10} >
-                    <Form.Item
-                        name="fio"
-                        rules={[{ required: true, message: 'Введите ФИО' }]}
-                        style={{flex:1, marginBottom:10}}
-                        initialValue={selectedUser?.cn}
-                    >
-                        <Input readOnly variant="filled"/>
-                    </Form.Item>
-                    <Form.Item
-                        style={{flex:0.4, marginBottom:10}}
-                        name="login"
-                        label={null}
-                        rules={[{ required: true, message: 'Введите логин' }]}
-                        initialValue={selectedUser?.sAMAccountName}
-                    >
-                        <Input readOnly variant="filled"/>
-                    </Form.Item>
-                </Flex>
-            </Card>
+            <CardUserInfo selectedUser={selectedUser}/>
             <Flex justify="space-around" style={{border:'1px solid lightgray', borderRadius:'8px', padding:'10px', marginBottom:'10px'}}>
                 <Form.Item
                     initialValue={dayjs()}
