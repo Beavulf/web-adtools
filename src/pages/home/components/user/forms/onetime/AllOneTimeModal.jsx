@@ -11,7 +11,7 @@ import { useLazyQuery } from "@apollo/client/react";
 import { GET_ONETIME_TASKS } from "../../../../../../query/OneTimeQuery";
 import OneTimeColumns from "./OnetimeColumns";
 
-const AllOneTimeModal = React.memo(({selectedUser, onCancel, onOpen}) => {
+const AllOneTimeModal = React.memo(({ onCancel, onOpen}) => {
 
     const [fetchAllOneTime, { data: dataAllOneTime, loading: loadingAllOneTime }] 
     = useLazyQuery(GET_ONETIME_TASKS, {

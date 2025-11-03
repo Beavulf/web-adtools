@@ -1,24 +1,11 @@
 import React, { useEffect, useMemo } from "react"
 import { useQuery } from "@apollo/client/react";
-import { gql } from '@apollo/client'
 import { Flex, Tag } from "antd";
-
-const GET_TASKINFO = gql`
-    query GetTaskInfo($taskName: String!) {
-        getCronTaskInfo(taskName: $taskName) {
-            isActive, #активна ли задача
-            source, 
-            sendAt, # 
-            getTimeout,
-            nextDate,
-            lastDate
-        }
-    }
-`;
+import { GET_TASK_INFO } from "../../../../query/ServiceQuery";
 
 const FooterInfo = React.memo(({onError}) => {
     // получение информации о задаче
-    const {data: dataTaskInfo, loading: loadingTaskInfo, error: errorTaskInfo} = useQuery(GET_TASKINFO, {
+    const {data: dataTaskInfo, loading: loadingTaskInfo, error: errorTaskInfo} = useQuery(GET_TASK_INFO, {
         variables:{taskName: "handleUserBlockingSchedule"},
         pollInterval: 60000
     });

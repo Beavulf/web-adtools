@@ -88,6 +88,8 @@ const LoginPage = () => {
       message = 'Неверный логин или пароль.';
     } else if (error.graphQLErrors?.length > 0) {
       message = error.graphQLErrors[0].message;
+    } else {
+      message = error.message;     
     }
     
     openNotification(message, 'error');

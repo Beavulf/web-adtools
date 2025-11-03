@@ -32,8 +32,13 @@ export const CustomMessageProvider = ({ children }) => {
         openNotification(text,'info');
     };
 
+    const msgWarning = (text) => {
+        openNotification(text,'warning');
+    };
+
+
     return (
-    <MessageContext.Provider value={{ contextHolder, msgSuccess, msgError, msgInfo }}>
+    <MessageContext.Provider value={{ contextHolder, msgSuccess, msgError, msgInfo, msgWarning }}>
         {contextHolder}
         {children}
     </MessageContext.Provider>

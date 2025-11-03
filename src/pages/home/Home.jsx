@@ -21,6 +21,7 @@ import UserInfo from "./components/user/UserInfo";
 import FooterInfo from "./components/layout/FooterInfo";
 import TableData from "./components/schedule/TableData";
 import {CustomMessageProvider} from "../../context/MessageContext";
+import ServiceSettingsModal from "./components/service-settings/ServiceSettingsModal";
 import "./Home.css"
 
 
@@ -49,7 +50,6 @@ const GET_USER_LDAP = gql`
 const items= [
     { key: '1', label: 'Главная' },
     { key: '2', label: 'Архив' },
-    { key: '3', label: 'Отделы'}
 ]
 
 const {Header, Sider, Content, Footer} = Layout;
@@ -57,13 +57,15 @@ const {Search} = Input
 const {Text, Paragraph} = Typography
 
 const HomePage = () => {
-    const [logoutServer, {loading, error}] = useMutation(LOGOUT_USER);
+    const [logoutServer, {loading: loadingLogoutServer, error: errorLogoutServer}] = useMutation(LOGOUT_USER);
     const { logout: logoutClient } = useAuth();
+    // отображение информации о пользователе
     const [hiddenUserInfo, setHiddenUserInfo] = useState(false)
-
+    
     // выбранная карточка
     const [selectedUserCard, setSelectedUserCard] = useState(null)
     
+    // значение для поиска в таблице
     const [tableSearchValue, setTableSearchValue] = useState("")
     const handleTableSearch = useCallback((searchValue) => {
         setTableSearchValue(searchValue);
@@ -94,8 +96,15 @@ const HomePage = () => {
     }, []);
 
     // получение списка пользователей из LDAP
-    const [getUserInfo,{data: dataUserInfo, loading: loadingUserInfo, error: errorUserInfo}] = useLazyQuery(GET_USER_LDAP);
+    const [getUserInfo,{data: dataUserInfo, loading: loadingUserInfo, error: errorUserInfo}] = useLazyQuery(GET_USER_LDAP,{
+        fetchPolicy: 'network-only'
+    });
 
+    useEffect(()=>{
+        if (errorLogoutServer) {
+            openNotification(`Ошибка при попытке выхода из аккаунта: ${errorLogoutServer.message}`,'error')
+        }
+    },[errorLogoutServer])
     useEffect(()=>{
         if (errorUserInfo) {
             openNotification(`Ошибка при попытке получения информации о пользователе: ${errorUserInfo.message}`,'error')
@@ -122,6 +131,20 @@ const HomePage = () => {
         }
     }
 
+    // легкий компонент для открытия модального окна настроек службы
+    function ServiceSettingsTrigger() {
+        const [open, setOpen] = React.useState(false);
+        return (
+            <>
+                <Popover content={<b>Открыть настройки службы</b>}>
+                    <SettingOutlined className="main-icon" onClick={()=>setOpen(true)} />
+                </Popover>
+                <ServiceSettingsModal isOpen={open} onCancel={()=>setOpen(false)} />
+            </>
+        );
+    }
+    
+    
     return (
         <Layout style={{
                 height: '100%', 
@@ -160,9 +183,7 @@ const HomePage = () => {
                 />
 
                 <div style={{ display:'flex', gap:'10px'}}>
-                    <Popover content={<b>Открыть настройки службы</b>}>
-                        <SettingOutlined className="main-icon"/>
-                    </Popover>
+                    <ServiceSettingsTrigger/>
                     <Popover content={<b>Выйти из программы</b>} trigger={'hover'}>
                         <LogoutOutlined
                             className="main-icon"
@@ -209,7 +230,7 @@ const HomePage = () => {
                             loading={loadingUserInfo}
                             onSearch={async (value)=>{
                                 await getUserInfo({
-                                    variables:{cnOrSAMA: value}, fetchPolicy: 'network-only'
+                                    variables:{cnOrSAMA: value}
                                 })
                             }}
                         />
@@ -232,7 +253,6 @@ const HomePage = () => {
                                     >
                                         <UserCard 
                                             isActive={userInfo.sAMAccountName === selectedUserCard?.sAMAccountName}
-                                            // key={userInfo.sAMAccountName}
                                             fio={userInfo.cn}
                                             department={userInfo.department}
                                             description={userInfo.description}
@@ -241,18 +261,14 @@ const HomePage = () => {
                                     </div>
                                 )
                             )) : 
-                                <div
-                                    style={{display:'flex', justifyContent:'center', alignItems:'center', height:'100%'}}
-                                >
+                                <div style={{display:'flex', justifyContent:'center', alignItems:'center', height:'100%'}}>
                                     <div className="empty-visible" style={{opacity: loadingUserInfo ? 0 : 1}}>
-                                        <Empty style={{fontSize:'24px'}}
-                                        />
+                                        <Empty style={{fontSize:'24px'}}/>
                                     </div>
                                 </div>
                             }
                     </div>
                 </Sider>
-
                 
                 <CustomMessageProvider>
                     <Content 

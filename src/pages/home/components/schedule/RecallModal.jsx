@@ -50,7 +50,7 @@ const RecallModal = React.memo(({isOpen, onCancel, record})=>{
                     idSchedule: record.id 
                 } 
             });
-            msgSuccess('Запись успешно добавлена');
+            msgSuccess('Отзыв успешно добавлен');
             onCancel();
         }
         catch(error) {

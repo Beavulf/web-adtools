@@ -20,6 +20,7 @@ import UserAddForm from "./forms/UserAddForm";
 import UserOneTimeForm from "./forms/UserOneTimeForm";
 import UserArchiveHistory from "./forms/UserArchiveHistory";
 import AllOneTimeModal from "./forms/onetime/AllOneTimeModal";
+import FailedTaskModal from "../schedule-statistics/FailedTaskModal";
 import './UserInfo.css'
 
 const {Text} = Typography;
@@ -73,6 +74,22 @@ const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
     const handleModalAllOneTimeClose = useCallback(() => {
         setIsModalAllOneTimeOpen(false);
     }, []);
+
+    function FailedStatisticsTrigger() {
+        const [open, setOpen] = React.useState(false);
+        return (
+            <>
+                <Popover content={<Text>Просмотреть список задач которые не выполнились</Text>}>
+                    <Button 
+                        icon={<FileExclamationOutlined />} 
+                        style={{height:'100%', flex:0.2}}
+                        onClick={()=>setOpen(true)}
+                    ></Button>
+                </Popover>
+                <FailedTaskModal isOpen={open} onCancel={()=>setOpen(false)} />
+            </>
+        );
+    }
 
     return (
         <Flex  style={{flex:1, marginBottom:'11px', marginTop:'11px'}}>
@@ -142,13 +159,7 @@ const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
                         // onClick={handleModalAllOneTimeOpen}
                     ></Button>
                 </Popover>
-                <Popover content={<Text>Просмотреть список задач которые не выполнились</Text>}>
-                    <Button 
-                        icon={<FileExclamationOutlined />} 
-                        style={{height:'100%', flex:0.2}}
-                        // onClick={handleModalAllOneTimeOpen}
-                    ></Button>
-                </Popover>
+                <FailedStatisticsTrigger/>
             </Flex>
 
             {/* модальное окно добавления задачи */}

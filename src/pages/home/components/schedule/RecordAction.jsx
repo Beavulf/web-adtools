@@ -10,13 +10,18 @@ import { useMutation } from "@apollo/client/react";
 import { DeleteOutlined, FileZipOutlined, HistoryOutlined } from "@ant-design/icons";
 import { GET_SCHEDULES, DELETE_SCHEDULE, ARCHIVE_SCHEDULE} from "../../../../query/GqlQuery";
 import { useCustomMessage } from "../../../../context/MessageContext";
+
 import RecallModal from "./RecallModal";
 
 const RecordAction = React.memo(({record}) => {
-    const {msgSuccess, msgError} = useCustomMessage()
+    const {msgSuccess, msgError, msgWarning} = useCustomMessage()
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const handleModalOpen = () => {
+    const handleModalRecall = () => {
+        if (record.isRecall) {
+            msgWarning('Запись уже отозвана')
+            return;
+        }
         setIsModalOpen(true);
     };
 
@@ -39,7 +44,7 @@ const RecordAction = React.memo(({record}) => {
     const confirmDelete = useCallback(async () => {
         try {
             await deleteSchedule({ variables: { id: record.id } });
-            msgSuccess('Удаление записи')
+            msgSuccess('Запись удалена')
         }
         catch(error) {
             msgError(`Ошибка при удалении: ${error.message}`);
@@ -52,7 +57,7 @@ const RecordAction = React.memo(({record}) => {
             await archiveSchedule({ 
                 variables: { 
                     id: record.id, 
-                    shouldArchiveRecall: false 
+                    shouldArchiveRecall: true 
                 } 
             });
             msgSuccess(`Запись отправлена в архив и удалена из расписания`)
@@ -66,10 +71,10 @@ const RecordAction = React.memo(({record}) => {
         <Flex gap={1}>
             <Popover content={<span>Отозвать сотрудника</span>}>
                 <Button 
-                    size="middle" 
+                    size="middle"
                     icon={<HistoryOutlined />} 
                     style={{color:'green'}}
-                    onClick={handleModalOpen}
+                    onClick={handleModalRecall}
                 />
             </Popover>
             <Popover content={<span>Архивировать запись и удалить из расписания</span>}>

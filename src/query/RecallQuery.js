@@ -15,6 +15,7 @@ const GET_RECALLS = gql`
     query GetRecalls($filter: RecallFilterInput!) {
         getRecalls(filter: $filter) 
     {
+        id
         order
         startDate
         endDate
@@ -26,7 +27,21 @@ const GET_RECALLS = gql`
 }
 `;
 
+const DELETE_RECALL = gql`
+    mutation DeleteRecall($id: ID!) {
+        deleteRecall(id: $id)
+    }
+`;
+
+const ARCHIVE_RECALL = gql`
+    mutation ArchiveRecall($id: ID!) {
+        recallArchive(id: $id)
+    }
+`;
+
 export {
     CREATE_RECALL,
-    GET_RECALLS
+    GET_RECALLS,
+    DELETE_RECALL,
+    ARCHIVE_RECALL
 }
