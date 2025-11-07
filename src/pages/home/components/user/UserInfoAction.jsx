@@ -5,7 +5,8 @@ import {
     Modal,
     Popover,
     Typography,
-    Divider
+    Divider,
+    Badge
 } from "antd"
 import { 
     FileSearchOutlined,
@@ -77,17 +78,20 @@ const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
 
     function FailedStatisticsTrigger() {
         const [open, setOpen] = React.useState(false);
+        const [countRecordsBadge, setCountRecordsBadge] = useState(0)
         return (
-            <>
+            <Flex style={{height:'100%', flex:0.2}}>
+                <Badge size="small" count={countRecordsBadge}>
                 <Popover content={<Text>Просмотреть список задач которые не выполнились</Text>}>
-                    <Button 
-                        icon={<FileExclamationOutlined />} 
-                        style={{height:'100%', flex:0.2}}
-                        onClick={()=>setOpen(true)}
-                    ></Button>
+                        <Button 
+                            icon={<FileExclamationOutlined />} 
+                            onClick={()=>setOpen(true)}
+                        ></Button>
                 </Popover>
-                <FailedTaskModal isOpen={open} onCancel={()=>setOpen(false)} />
-            </>
+                </Badge>
+
+                <FailedTaskModal countRecords={setCountRecordsBadge} isOpen={open} onCancel={()=>setOpen(false)} />
+            </Flex>
         );
     }
 
@@ -103,7 +107,7 @@ const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
                         iconPosition="end" 
                         disabled={!selectedUser}
                         onClick={handleModalOpen}
-                        
+                        title="Добавить новую задачу в расписание на выбранного сотрудника"
                     >Добавить в расписание</Button>
                     <Flex flex={1} gap={10}>
                         <Button 
@@ -113,6 +117,7 @@ const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
                             style={{height:'100%', flex:1, whiteSpace:'normal'}}
                             disabled={!selectedUser}
                             onClick={handleModalOneTimeOpen}
+                            title="Добавить разовую задачу на выбранного сотрудника"
                         >Добавить разовую задачу</Button>
                         
                     </Flex>
@@ -124,6 +129,7 @@ const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
                         icon={<FileSearchOutlined/>} 
                         iconPosition="end" 
                         onClick={handleModalGetHistoryOpen}
+                        title="Просмотр архивной истории задач выбранного сотрудника"
                     >
                         Просмотреть историю
                     </Button>
@@ -138,6 +144,7 @@ const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
                         icon={<SearchOutlined/>} 
                         iconPosition="end"
                         onClick={handleFindInSchedule}
+                        title="Найти активную задачу выбранного сотрудника в расписании (по логину)"
                     >
                         Найти в расписании
                     </Button>
@@ -191,20 +198,11 @@ const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
             </Modal>
 
             {/* модальное окно просмотра истории задач*/}
-            <Modal
-                title='Просмотр истории задач из Архива'
-                open={isModalGetHistoryOpen}
+            <UserArchiveHistory 
+                sAMAccountName={selectedUser?.sAMAccountName}
+                isOpen={isModalGetHistoryOpen}
                 onCancel={handleModalGetHistoryClose}
-                footer={null}
-                destroyOnHidden
-                width={1500}
-                style={{top:'20px'}}
-            >
-                <UserArchiveHistory 
-                    sAMAccountName={selectedUser?.sAMAccountName}
-                    // handleModalClose={handleModalGetHistoryClose}
-                />
-            </Modal>
+            />
 
             <AllOneTimeModal 
                 onOpen={isModalAllOneTimeOpen} 

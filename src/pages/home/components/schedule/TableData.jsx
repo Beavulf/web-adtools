@@ -12,6 +12,8 @@ import { useQuery } from "@apollo/client/react";
 import scheduleColumns from "./ScheduleColumns";
 import { GET_SCHEDULES } from "../../../../query/GqlQuery";
 import UserReacllInfo from "./UserRecallInfo";
+import filterSchedules from '../../../../utils/filterSchedules'
+import RecordAction from "./RecordAction";
 
 const {Search} = Input
 
@@ -35,7 +37,6 @@ const TableData = React.memo(({onError, onHidden, searchValue})=> {
         });
     }, [searchValue]);
 
-
     // отправка ошибки в родительский компонент
     useEffect(() => {
         if (errorSchedules) onError?.(errorSchedules?.message);
@@ -48,7 +49,7 @@ const TableData = React.memo(({onError, onHidden, searchValue})=> {
             onHidden?.(newValue);
             return newValue;
         });
-    },[onHidden])
+    },[onHidden]);
 
     const handleSearch = useCallback(value => {
         startTransition(() => setConfirmTextValue(value));
@@ -61,22 +62,15 @@ const TableData = React.memo(({onError, onHidden, searchValue})=> {
           if (!deferredConfirmValue.trim()) {
             setFilteredSchedules(dataSchedules.getSchedules);
           } else {
-            const searchLower = deferredConfirmValue.toLowerCase();
-            const filtered = dataSchedules.getSchedules.filter(obj =>
-              ['fio', 'login', 'order', 'createdAt', 'updatedAt', 'description', 'startDate', 'endDate']
-                .some(key => {
-                  const value = obj[key];
-                  return value && String(value).toLowerCase().includes(searchLower);
-                })
-            );
-            setFilteredSchedules(filtered);
+            const filteredSchedules = filterSchedules(dataSchedules?.getSchedules, deferredConfirmValue);
+            setFilteredSchedules(filteredSchedules);
           }
         }, 0);
         return () => clearTimeout(handler);
       }, [dataSchedules, deferredConfirmValue]);
-    // мемоизируем колонки таблицы
-    const memoizedColumns = useMemo(() => scheduleColumns, []);
-      
+
+    const columns = scheduleColumns(false);
+
     return (
         <Flex vertical gap={5} style={{minHeight:0, transition:'all 0.3s ease-out', height:'100%'}}>
             <Flex gap={5}>
@@ -111,7 +105,7 @@ const TableData = React.memo(({onError, onHidden, searchValue})=> {
                     <Table
                         pagination={false}
                         dataSource={filteredSchedules}
-                        columns={memoizedColumns}
+                        columns={columns}
                         size="small"
                         rowKey={'id'}
                         loading={loadingSchedules}

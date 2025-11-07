@@ -31,7 +31,21 @@ const GET_ONETIME_TASKS = gql`
 }
 `;
 
+const DELETE_ONETIME_TASK = gql`
+    mutation DeleteOneTime($id: ID!) {
+        deleteOneTime(id: $id)
+    }
+`;
+
+const ARCHIVE_ONETINE_TASK = gql`
+    mutation ArchiveOneTime($id: ID!) {
+        archiveOneTime(id: $id)
+    }
+`;
+
 export {
     CREATE_ONETIME_TASK,
-    GET_ONETIME_TASKS
+    GET_ONETIME_TASKS,
+    DELETE_ONETIME_TASK,
+    ARCHIVE_ONETINE_TASK
 }

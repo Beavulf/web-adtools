@@ -3,6 +3,8 @@ import {
     Flex,
     Tag
 } from "antd"
+import RecordAction from "./RecordAction";
+
 const OneTimeColumns = [
     {
         title: 'ФИО',
@@ -96,6 +98,12 @@ const OneTimeColumns = [
         width: 150,
         ellipsis: true,
     },
+    {
+        title: 'Действия',
+        key: 'actions',
+        render: (_, record) => <RecordAction record={record}/>,
+        width: 80,
+    }
 ]
 
 export default OneTimeColumns;

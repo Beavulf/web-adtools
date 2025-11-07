@@ -1,17 +1,21 @@
-import React, {useState, useCallback, useMemo, useDeferredValue, useEffect} from "react";
+import React, {useState, useMemo, useDeferredValue, useEffect} from "react";
 import { 
     Button,
     Flex,
     Table,
     Popover,
     Input,
-    Typography
+    Typography,
+    Modal
 } from "antd"
 import { SyncOutlined } from "@ant-design/icons";
 import { GET_ARCHIVE_SCHEDULES } from "../../../../../query/GqlQuery";
 import { useLazyQuery } from "@apollo/client/react";
 import scheduleColumns from "../../schedule/ScheduleColumns";
 import { useCustomMessage } from "../../../../../context/MessageContext";
+import useArchiveStatistics from '../../../../../hooks/user/useArchiveStatistics'
+import filterSchedules from '../../../../../utils/filterSchedules'
+import UserReacllInfo from "../../schedule/UserRecallInfo";
 
 const {Search} = Input
 const {Text} = Typography
@@ -23,69 +27,53 @@ const styleInfoBlock = {
     flex:1
 }
 
-const UserArchiveHistory = React.memo(({sAMAccountName})=>{
+const UserArchiveHistory = React.memo(({sAMAccountName, isOpen, onCancel})=>{
     const [confirmTextValue, setConfirmTextValue] = useState("");
     const deferredConfirmValue = useDeferredValue(confirmTextValue);
     const {msgError} = useCustomMessage()
+    const columns = scheduleColumns(true);
 
-    const [fetchArchiveSchedules, { data: dataArchiveSchedules, loading: loadingArchiveSchedules, error: errorArchiveSchedules }] 
+    const [fetchArchiveSchedules, { data: dataArchiveSchedules, loading: loadingArchiveSchedules }] 
     = useLazyQuery(GET_ARCHIVE_SCHEDULES, {
         fetchPolicy: 'cache-and-network',
     });
 
-    // Функция для подсчета общего количества дней по массиву записей (например, стажировок)
-    const getTotalDays = useCallback((records) => {
-        if (!Array.isArray(records)) return 0;
-        const days = records.map(obj => {
-            const startDate = new Date(obj.startDate);
-            const endDate = new Date(obj.endDate);
-            const timeDiff = endDate.getTime() - startDate.getTime() + 1;
-            return Math.ceil(timeDiff / (1000 * 3600 * 24));
-        });
-        return days.reduce((a, b) => a + b, 0);
-    }, []);
+    const statsByType = useArchiveStatistics(dataArchiveSchedules?.getArchiveSchedules);
 
-    // поулчение статистики по всем типам
-    const statsByType = useMemo(() => {
-        if (!dataArchiveSchedules?.getArchiveSchedules) return {};
-        const byType = {};
-        for (const type of ['OTPYSK','STAJIROVKA','DEKRET','UCHEBA','PRODLENIE_OTPYSKA','KOMANDIROVKA']) {
-            const items = dataArchiveSchedules.getArchiveSchedules.filter(obj => obj.type === type);
-            byType[type] = { totalCount: items.length, totalDays: getTotalDays(items) };
+    const handleFetchArchiveSchedules = async () => {
+        try {
+            await fetchArchiveSchedules({variables: {filter: {login: {contains: sAMAccountName}}}});
         }
-        return byType;
-    }, [dataArchiveSchedules, getTotalDays]);
+        catch(err) {
+            msgError(err.message)
+        }
+    }
 
     useEffect(()=>{
-        fetchArchiveSchedules({variables: {filter: {login: {contains: sAMAccountName}}}});
-    },[])
+        if (!isOpen) return;
+        handleFetchArchiveSchedules();
+    },[isOpen, sAMAccountName])
 
-    useEffect(() => {
-        if (errorArchiveSchedules) msgError(errorArchiveSchedules?.message);
-    }, [errorArchiveSchedules]);
-
-    const handleSearch = useCallback((value) => {
+    const handleSearch = (value) => {
         setConfirmTextValue(value);
-    }, []);
+    }
 
+    // фильтрация таблицы
     const filteredSchedules = useMemo(() => {
-        if (!dataArchiveSchedules?.getArchiveSchedules) return [];
-        if (!deferredConfirmValue.trim()) return dataArchiveSchedules.getArchiveSchedules;
-        
-        const searchLower = deferredConfirmValue.toLowerCase();
-        return dataArchiveSchedules.getArchiveSchedules.filter(obj =>
-            ['fio', 'login', 'order', 'createdAt', 'updatedAt', 'description', 'startDate', 'endDate'].some(
-                key => {
-                    const value = obj[key];
-                    return value && String(value).toLowerCase().includes(searchLower);
-                }
-            )
-        );
+        return filterSchedules(dataArchiveSchedules?.getArchiveSchedules, deferredConfirmValue);
     }, [dataArchiveSchedules, deferredConfirmValue]);
 
-    const memoizedColumns = useMemo(() => scheduleColumns, []);
-
+    
     return (
+        <Modal
+            title='Просмотр истории задач из Архива'
+            open={isOpen}
+            onCancel={onCancel}
+            footer={null}
+            destroyOnHidden
+            width={1500}
+            style={{top:'20px'}}
+        >
         <Flex vertical gap={10}>
             <Flex gap={5}>
                 <Popover content={<span>Строк в таблице</span>}>
@@ -98,7 +86,7 @@ const UserArchiveHistory = React.memo(({sAMAccountName})=>{
                 />
                 <Popover content={<span>Обновить таблицу</span>}>
                     <Button 
-                        onClick={() => fetchArchiveSchedules({variables: {filter: {login: {contains: sAMAccountName}}}})} 
+                        onClick={handleFetchArchiveSchedules} 
                         disabled={loadingArchiveSchedules} 
                         icon={<SyncOutlined 
                         spin={loadingArchiveSchedules}/>} 
@@ -135,13 +123,17 @@ const UserArchiveHistory = React.memo(({sAMAccountName})=>{
             <Table
                 pagination={false}
                 dataSource={filteredSchedules}
-                columns={memoizedColumns}
+                columns={columns}
                 size="middle"
                 rowKey={'id'}
                 loading={loadingArchiveSchedules}
                 scroll={{y:'600px'}}
+                expandable={{
+                    expandedRowRender: (record) => <UserReacllInfo record={record} isArchive={true}/>,
+                }}
             />
         </Flex>
+        </Modal>
     )
 })
 

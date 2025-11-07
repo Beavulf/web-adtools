@@ -6,19 +6,22 @@ import {
     Button,
     List,
     Dropdown,
-    Space
+    Space,
+    Input
 } from 'antd'
 import dayjs from "dayjs";
 import { UserOutlined, DownOutlined } from "@ant-design/icons";
-
+import {useCustomMessage} from '../../../../context/MessageContext'
 
 const {Text} = Typography;
+const {Search} = Input;
 
-const FailedTaskModal = React.memo(({isOpen, onCancel})=>{
-    const [fileNotFoundData, setFileNotFoundData] = useState(null);
+const FailedTaskModal = React.memo(({isOpen, onCancel, countRecords})=>{
+    const [fileNotFoundData, setFileNotFoundData] = useState([]);
     const [listNotFoundData, setListNotFoundData] = useState([]);
-    // const [dropDownItems, setDropDownItems] = useState([]);
+    const [dateLogFile, setDateLogFile] = useState(dayjs().format('YYYY-MM-DD'));
 
+    const {msgWarning, msgError} = useCustomMessage()
     const fetchCronLog = async (url,date='') => {
         try {
             const response = await fetch(`${url}${date}`, {
@@ -29,10 +32,15 @@ const FailedTaskModal = React.memo(({isOpen, onCancel})=>{
             });
         
             if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
+                msgWarning(`Файл логов на сегодня еще не создан.`);
+                return []
             }
         
             const data = await response.json();
+            
+            if (!data) {
+                return []
+            }
             // Если data - это строка с данными через перенос строки
             if (typeof data === 'string' || data.content) {
                 const content = typeof data === 'string' ? data : data.content;
@@ -44,51 +52,59 @@ const FailedTaskModal = React.memo(({isOpen, onCancel})=>{
                     .filter(line => line.length > 0);
                 
                 return lines;
+            } 
+            if (data.files) { 
+                return data.files;                
             }
         
-            return data;
+            return [];
         } catch (error) {
-            console.error('Ошибка при загрузке not-found лога:', error);
+            msgError(`Ошибка при загрузке not-found лога: ${error.message}`);
             throw error;
         }
     };
 
     useEffect(() => {
+        if (!isOpen) {
+            return;
+        }
         const fetchData = async () => {
-            try {
-                const data = await fetchCronLog('http://localhost:3000/api/logs/not-found/',new dayjs().format('YYYY-MM-DD'));
-                setFileNotFoundData(data);
-                const listFile = await fetchCronLog('http://localhost:3000/api/logs/not-found/');
-                setListNotFoundData(listFile);
-            } catch (error) {
-                console.error('Ошибка при загрузке данных:', error);
-            }
+            const data = await fetchCronLog('http://localhost:3000/api/logs/not-found/',dayjs().format('YYYY-MM-DD'));
+            setFileNotFoundData(data);
+            const listFile = await fetchCronLog('http://localhost:3000/api/logs/not-found/');
+            setListNotFoundData(listFile);
         };
     
         fetchData();
     },[isOpen])
 
-    const handleMenuClick = (e) => {
-        console.log('click', e);
-    };
+    useEffect(()=>{
+        const fetchCount = async () => {
+            const count = await fetchCronLog('http://localhost:3000/api/logs/not-found/',dayjs().format('YYYY-MM-DD'))
+            countRecords(count.length)
+        }
+        fetchCount()
+    },[])
 
-    // useEffect(()=>{
-    //     const dropdownItems = listNotFoundData?.files?.map((str, idx) => ({
-    //         label: str,
-    //         key: String(idx),
-    //     }));
-    //     console.log(dropdownItems);
-        
-    //     setDropDownItems(dropdownItems);
-    // },[listNotFoundData])
-    const dropdownItems = listNotFoundData?.files?.map((str, idx) => ({
-        label: str,
-        key: String(idx),
-    }));
-    const menuProps = {
-        items: dropdownItems,
-        onClick: handleMenuClick,
-    };
+    const handleSearchLogFile = async (value) => {
+        setDateLogFile(value)
+        const data = await fetchCronLog('http://localhost:3000/api/logs/not-found/',value)
+        setFileNotFoundData(data)
+    }
+
+    function HeaderSearch() {
+        return (
+            <Flex justify="space-between" align="center" gap={20}>
+                <Text style={{}}>Список на {dayjs(dateLogFile).format('DD.MM.YYYY')}</Text>
+                <Search 
+                    style={{flex:1}}
+                    placeholder="Поиск файла логов по дате (гггг-мм-дд)..."
+                    allowClear
+                    onSearch={handleSearchLogFile}                    
+                />
+            </Flex>
+        )
+    }
     return (
         <Modal
             title={<Text>Список не выполненных задач</Text>}
@@ -97,31 +113,23 @@ const FailedTaskModal = React.memo(({isOpen, onCancel})=>{
             footer={null}
             width={1200}
             destroyOnHidden
+            style={{overflow:'auto'}}
         >
             <List
                 header={
-                    <Flex justify="space-between" align="center">
-                        <Text>Список на {new dayjs().format('DD.MM.YYYY')}</Text>
-                        <Dropdown menu={menuProps}>
-                            <Button>
-                                <Space>
-                                    Все даты
-                                    <DownOutlined />
-                                </Space>
-                            </Button>
-                        </Dropdown>
-                    </Flex>
+                    <HeaderSearch/>
                 }
                 bordered
                 dataSource={fileNotFoundData}
                 renderItem={item => 
-                <List.Item>
-                    <List.Item.Meta
-                        avatar={<UserOutlined/>}
-                        title={<Text>{item}</Text>}
-                    />
-                </List.Item>
+                    <List.Item>
+                        <List.Item.Meta
+                            avatar={<UserOutlined/>}
+                            title={<Text>{item}</Text>}
+                        />
+                    </List.Item>
                 }
+                style={{maxHeight:'700px', overflow:'auto'}}
             />
         </Modal>
     )

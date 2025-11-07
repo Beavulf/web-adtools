@@ -1,3 +1,9 @@
+/**
+ * ServiceSettingsModal — модальное окно управления cron-службой.
+ * Показывает текущее расписание, статус, позволяет запускать/останавливать и выполнять «горячий запуск».
+ * Важно: после «горячего запуска» вручную обновляем расписания (GET_SCHEDULES), чтобы UI сразу отобразил изменения.
+ */
+
 import React, {useState, useEffect} from "react";
 import {
     Modal,
@@ -9,16 +15,11 @@ import {
     Button,
     Popconfirm,
     message,
-    Popover
 } from 'antd'
-import { useQuery, useMutation, useApolloClient } from "@apollo/client/react";
-import { GET_TASK_INFO, STOP_TASK, START_TASK, UPDATE_TASK, FIRE_ONTICK_TASK } from "../../../../query/ServiceQuery";
-import { GET_SCHEDULES } from "../../../../query/GqlQuery";
-import { BulbOutlined, CheckCircleOutlined, ReloadOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, ReloadOutlined } from "@ant-design/icons";
+import { useCronTask } from "../../../../hooks/services/useCronTask";
 import styled from "styled-components";
 import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
-dayjs.extend(duration);
 
 const StyledCheckIcon = styled(CheckCircleOutlined)`
     color: green;
@@ -37,47 +38,11 @@ const taskName = 'handleUserBlockingSchedule'
 
 const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
     const [messageApi, contextHolder] = message.useMessage();
-    const client = useApolloClient();
-
-    const [stopTask, { loading: loadingStopTask, error: errorStopTask }] = useMutation(STOP_TASK,{
-        refetchQueries: [{ query: GET_TASK_INFO, variables: { taskName } }]
-    });
-    const [startTask, { loading: loadingStartTask, error: errorStartTask }] = useMutation(START_TASK,{
-        refetchQueries: [{ query: GET_TASK_INFO, variables: { taskName } }]
-    });
-    const [updateTask, { loading: loadingUpdateTask, error: errorUpdateTask }] = useMutation(UPDATE_TASK,{
-        refetchQueries: [{ query: GET_TASK_INFO, variables: { taskName } }]
-    });
-    const [fireOnTick, { loading: loadingFireOnTick, error: errorFireOnTick }] = useMutation(FIRE_ONTICK_TASK,{
-        refetchQueries: [{ query: GET_SCHEDULES }, { query: GET_TASK_INFO, variables: { taskName } } ],
-        awaitRefetchQueries: true,
-        onError: (err)=> messageApi.error(err.message),
-        onCompleted: async () => {
-            // Явно обновляем GET_SCHEDULES после завершения мутации
-            try {
-                await client.refetchQueries({
-                    include: [GET_SCHEDULES],
-                    updateCache: false
-                });
-            } catch (err) {
-                messageApi.error('Error refetching schedules:', err);
-            }
-        }
-    });
-
-    const { data: dataTaskInfo, loading: loadingTaskInfo, error: errorTaskInfo } = useQuery(
-        GET_TASK_INFO,
-        {
-            variables: { taskName },
-            fetchPolicy: 'cache-and-network',
-            skip: !isOpen,
-            onError: (err)=> messageApi.error(err.message)
-        }
-    );
+    const {taskInfo, loading, actions, error: errorTaskInfo} = useCronTask(taskName, {enabled: isOpen, onError: (err)=> messageApi.error(err.message)}) 
 
     const handleStopTask = async () => {
         try {
-            await stopTask({ variables: { taskName } })
+            await actions.stopTask()
             messageApi.success('Служба остановлена')
         }
         catch(err) {
@@ -87,7 +52,7 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
 
     const handleStartTask = async () => {
         try {
-            await startTask({ variables: { taskName } })
+            await actions.startTask()
             messageApi.success('Служба запущена')
         }
         catch(err) {
@@ -101,7 +66,7 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
                 messageApi.error('Введите корректное время расписания службы')
                 return
             }
-            await updateTask({ variables: { taskName, cronExpression: source } })
+            await actions.updateTask(source)
             messageApi.success('Время расписания службы обновлено')
         }
         catch(err) {
@@ -111,7 +76,7 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
 
     const handleFireOnTick = async () => {
         try {
-            await fireOnTick({ variables: { taskName } })
+            await actions.fireOnTick()
             messageApi.success('Служба выполнена прямо сейчас')
         }
         catch(err) {
@@ -122,16 +87,16 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
     // отображение исходного времени расписания службы
     const [source, setSource] = useState('')
     useEffect(() => {
-        if (dataTaskInfo?.getCronTaskInfo?.source) {
-            setSource(dataTaskInfo.getCronTaskInfo.source);
+        if (isOpen && taskInfo?.source) {
+            setSource(taskInfo?.source);
         }
-    }, [dataTaskInfo?.getCronTaskInfo?.source]);
+    }, [taskInfo?.source, isOpen]);
 
     // отображение статуса службы
-    function ViewServiceStatus() {
+    function ServiceStatusTag() {
         return (
-            <Tag color={dataTaskInfo?.getCronTaskInfo?.isActive ? 'green' : 'red'}>
-                <Text>{dataTaskInfo?.getCronTaskInfo?.isActive ? 'Включена' : 'Выключена'}</Text>
+            <Tag color={taskInfo?.isActive ? 'green' : 'red'}>
+                <Text>{taskInfo?.isActive ? 'Включена' : 'Выключена'}</Text>
             </Tag>
         )
     }
@@ -146,10 +111,10 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
             destroyOnHidden
         >
             {contextHolder}
-            <Card title={<Text>Служба <span style={{color:'purple'}}>{taskName}</span></Text>} extra={<ViewServiceStatus/>}>
-                {loadingTaskInfo && <Text>Загрузка...</Text>}
-                {errorTaskInfo && <Text type="danger">Ошибка: {errorTaskInfo.message}</Text>}
-                {dataTaskInfo && (
+            <Card title={<Text>Служба <span style={{color:'purple'}}>{taskName}</span></Text>} extra={<ServiceStatusTag/>}>
+                {loading.info && <Text>Загрузка...</Text>}
+                {errorTaskInfo && <Text type="danger">Ошибка: {errorTaskInfo?.message}</Text>}
+                {taskInfo && (
                     <Flex vertical gap={10}>
                         <Flex align="center">
                             <Text>Установленное время сработки службы:</Text>
@@ -168,21 +133,20 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
                                         okText="Да"
                                         cancelText="Нет"
                                         onConfirm={handleUpdateTask}
-                                        loading={loadingUpdateTask}
+                                        loading={loading.update}
                                     >
                                         <StyledCheckIcon 
                                             title="Сохранить измнения" 
                                         />
                                     </Popconfirm>
                                 }
-                                addonAfter={<ReloadOutlined title="Сбросить" size='small' onClick={()=>setSource(dataTaskInfo?.getCronTaskInfo?.source)}/>}
+                                addonAfter={<ReloadOutlined title="Сбросить" size='small' onClick={()=>setSource(taskInfo?.source)}/>}
                             >
                             </Input>
                         </Flex>
                         <Flex gap={5} vertical style={{backgroundColor:'rgba(187, 187, 187, 0.1)', borderRadius:'8px', padding:'5px', color:'gray'}}>
                             <Flex align="center" justify="center" gap={10} >
                                 <Flex>
-                                    {/* <BulbOutlined  style={{marginRight:'5px'}}/> */}
                                     Подсказка по заполнению:<br></br>
                                     1-й (0): минута (0-я минута часа)<br></br>
                                     2-й (0-23/10): часы (каждые 10 часов с 0 до 23)<br></br>
@@ -198,21 +162,21 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
                             </Flex>
                         </Flex>
                         <Flex justify="space-between" style={{margin:'0'}}>
-                            <Text>Дата след. сработки: {dataTaskInfo?.getCronTaskInfo?.sendAt}</Text>
-                            <Text>Время до след сработки: {dataTaskInfo?.getCronTaskInfo?.getTimeout}</Text>
+                            <Text>Дата след. сработки: {taskInfo?.sendAt}</Text>
+                            <Text>Время до след сработки: {taskInfo?.getTimeout}</Text>
                         </Flex>
                         <Flex justify="space-between" style={{margin:'0'}}>
-                            <Text>Следующий запуск: {dayjs(dataTaskInfo?.getCronTaskInfo?.nextDate).format('DD.MM.YYYY HH:mm:ss')}</Text>
-                            <Text>Последний запуск: {dataTaskInfo?.getCronTaskInfo?.lastDate ?? '-'}</Text>
+                            <Text>Следующий запуск: {dayjs(taskInfo?.nextDate).format('DD.MM.YYYY HH:mm:ss')}</Text>
+                            <Text>Последний запуск: {taskInfo?.lastDate ?? '-'}</Text>
                         </Flex>
                         <Flex gap={10} style={{marginTop:'10px'}}>
                             <Button 
                                 block 
                                 color='green' 
                                 variant="filled" 
-                                disabled={dataTaskInfo?.getCronTaskInfo?.isActive}
+                                disabled={taskInfo?.isActive}
                                 onClick={async () => await handleStartTask()}
-                                loading={loadingStartTask}
+                                loading={loading.start}
                                 title="Запустить службу на сервере"
                                 >Запустить
                             </Button>
@@ -222,7 +186,7 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
                                 okText="Да"
                                 cancelText="Нет"
                                 onConfirm={async () => await handleFireOnTick()}
-                                loading={loadingFireOnTick}
+                                loading={loading.fireOnTick}
                             >
                                 <Button 
                                     block 
@@ -237,24 +201,16 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
                                 color="danger" 
                                 variant="filled"
                                 onClick={async ()=> await handleStopTask()}
-                                loading={loadingStopTask}
+                                loading={loading.stop}
                                 title="Остановить службу на сервере"
                                 >Остановить
                             </Button>
                         </Flex>
                     </Flex>
-                )}
-                {/* {dataTaskInfo && (
-                    <pre>{JSON.stringify(dataTaskInfo, null, 2)}</pre>
-                )} */}
-                
+                )}                
             </Card>
         </Modal>
     )
 })
-// 1-й (0): минута (0-я минута часа)
-// 2-й (0-23/5): часы (каждые 5 часов с 0 до 23)
-// 3-й (): день месяца (каждый день)
-// 4-й (): месяц (каждый месяц)
-// 5-й (): день недели (любые дни недели)
+
 export default ServiceSettingsModal;

@@ -39,9 +39,27 @@ const ARCHIVE_RECALL = gql`
     }
 `;
 
+const GET_ARCHIVE_RECALLS = gql`
+    query GetArchiveRecalls($filter: RecallFilterInput!) {
+        getArchiveRecalls(filter: $filter) 
+        {
+            id
+            order
+            startDate
+            endDate
+            status
+            createdAt
+            createdBy
+            description
+            scheduleId
+        }
+    }
+`
+
 export {
     CREATE_RECALL,
     GET_RECALLS,
     DELETE_RECALL,
-    ARCHIVE_RECALL
+    ARCHIVE_RECALL,
+    GET_ARCHIVE_RECALLS
 }

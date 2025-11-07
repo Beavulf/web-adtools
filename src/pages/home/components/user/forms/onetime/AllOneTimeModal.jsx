@@ -3,8 +3,6 @@ import {
     Button,
     Flex,
     Modal,
-    Popover,
-    Typography,
     Table
 } from "antd"
 import { useLazyQuery } from "@apollo/client/react";
