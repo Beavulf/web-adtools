@@ -75,7 +75,7 @@ const UserReacllInfo = React.memo(({record, isArchive = false}) => {
     }
 
     return (
-        <Flex justify={loadingRecall ? 'center' : ''}>
+        <Flex vertical justify={loadingRecall ? 'center' : ''}>
             {loadingRecall ? <LoadingOutlined/>:
                 dataRecall?.[isArchive ? 'getArchiveRecalls' : 'getRecalls']?.map((recall)=>{
                     return (

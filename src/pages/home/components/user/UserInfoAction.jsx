@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from "react";
+import React, {useState, useCallback, useEffect} from "react";
 import { 
     Button,
     Flex,
@@ -22,7 +22,10 @@ import UserOneTimeForm from "./forms/UserOneTimeForm";
 import UserArchiveHistory from "./forms/UserArchiveHistory";
 import AllOneTimeModal from "./forms/onetime/AllOneTimeModal";
 import FailedTaskModal from "../schedule-statistics/FailedTaskModal";
+import fetchCronLogData from "../../../../utils/fetchCronLogData";
+import CompletedTaskModal from "../schedule-statistics/CompletedTaskModal";
 import './UserInfo.css'
+import dayjs from "dayjs";
 
 const {Text} = Typography;
 
@@ -76,12 +79,27 @@ const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
         setIsModalAllOneTimeOpen(false);
     }, []);
 
-    function FailedStatisticsTrigger() {
+    // кнопка для открытия модального окна
+    const FailedStatisticsTrigger = React.memo(()=> {
         const [open, setOpen] = React.useState(false);
         const [countRecordsBadge, setCountRecordsBadge] = useState(0)
+
+        useEffect(()=>{
+            const fetchData = async () => {
+                try {
+                    const data = await fetchCronLogData('http://localhost:3000/api/logs/not-found/', dayjs().format('YYYY-MM-DD'));
+                    setCountRecordsBadge(data.length)
+                }
+                catch(err) {
+                    console.error(err); 
+                }
+            };
+            fetchData();
+        },[])
+
         return (
             <Flex style={{height:'100%', flex:0.2}}>
-                <Badge size="small" count={countRecordsBadge}>
+                <Badge style={{padding:'0 3px'}}  size="small" count={countRecordsBadge}>
                 <Popover content={<Text>Просмотреть список задач которые не выполнились</Text>}>
                         <Button 
                             icon={<FileExclamationOutlined />} 
@@ -90,10 +108,31 @@ const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
                 </Popover>
                 </Badge>
 
-                <FailedTaskModal countRecords={setCountRecordsBadge} isOpen={open} onCancel={()=>setOpen(false)} />
+                <FailedTaskModal isOpen={open} onCancel={()=>setOpen(false)} />
             </Flex>
         );
-    }
+    });
+
+    const CompleatedStatisticsTrigger = React.memo(()=> {
+        const [open, setOpen] = React.useState(false);
+        // const [countRecordsBadge, setCountRecordsBadge] = useState(0)
+
+        return (
+            <Flex style={{height:'100%', flex:0.2}}>
+                <Badge style={{padding:'0 3px'}} size="small" count={55} color="green">
+                    <Popover content={<Text>Просмотреть список задач выполненных сегодня</Text>}>
+                        <Button 
+                            icon={<FileDoneOutlined  />} 
+                            style={{height:'100%', flex:0.2}}
+                            onClick={()=>setOpen(true)}
+                        ></Button>
+                    </Popover>
+                </Badge>
+
+                <CompletedTaskModal isOpen={open} onCancel={()=>setOpen(false)} />
+            </Flex>
+        );
+    });
 
     return (
         <Flex  style={{flex:1, marginBottom:'11px', marginTop:'11px'}}>
@@ -159,13 +198,7 @@ const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
                         onClick={handleModalAllOneTimeOpen}
                     ></Button>
                 </Popover>
-                <Popover content={<Text>Просмотреть список задач выполненных сегодня</Text>}>
-                    <Button 
-                        icon={<FileDoneOutlined  />} 
-                        style={{height:'100%', flex:0.2}}
-                        // onClick={handleModalAllOneTimeOpen}
-                    ></Button>
-                </Popover>
+                <CompleatedStatisticsTrigger/>
                 <FailedStatisticsTrigger/>
             </Flex>
 

@@ -23,6 +23,27 @@ const GET_SCHEDULES = gql`
 }
 `;
 
+const GET_SCHEDULES_FILTER = gql`
+    query GetSchedules($filter: ScheduleFilterInput!) {
+    getSchedules(filter: $filter) {
+        id
+        fio
+        login
+        type
+        order
+        startDate
+        endDate
+        status
+        description
+        createdAt
+        updatedAt
+        createdBy
+        updatedBy
+        isRecall
+    }
+}
+`;
+
 const CREATE_SCHEDULE = gql`
     mutation CreateSchedule($data: ScheduleCreateInput!) {
         createSchedule(data: $data)
@@ -70,5 +91,6 @@ export {
     CREATE_SCHEDULE, 
     DELETE_SCHEDULE, 
     ARCHIVE_SCHEDULE, 
-    GET_ARCHIVE_SCHEDULES
+    GET_ARCHIVE_SCHEDULES,
+    GET_SCHEDULES_FILTER
 };

@@ -44,7 +44,7 @@ export function useCronTask(taskName, options={}) {
         onCompleted: async () => {
             // Явно обновляем GET_SCHEDULES после завершения мутации
             await client.refetchQueries({
-                include: [GET_SCHEDULES],
+                include: [{ query: GET_SCHEDULES, variables: {filter:{}}}]
             });
         }
     });

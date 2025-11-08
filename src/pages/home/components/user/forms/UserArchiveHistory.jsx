@@ -31,6 +31,7 @@ const UserArchiveHistory = React.memo(({sAMAccountName, isOpen, onCancel})=>{
     const [confirmTextValue, setConfirmTextValue] = useState("");
     const deferredConfirmValue = useDeferredValue(confirmTextValue);
     const {msgError} = useCustomMessage()
+    // true потому что архивные записи (не будут отображаться кнопки действий)
     const columns = scheduleColumns(true);
 
     const [fetchArchiveSchedules, { data: dataArchiveSchedules, loading: loadingArchiveSchedules }] 
@@ -38,20 +39,26 @@ const UserArchiveHistory = React.memo(({sAMAccountName, isOpen, onCancel})=>{
         fetchPolicy: 'cache-and-network',
     });
 
+    // получение статистики по типу задач
     const statsByType = useArchiveStatistics(dataArchiveSchedules?.getArchiveSchedules);
 
     const handleFetchArchiveSchedules = async () => {
         try {
+            setConfirmTextValue('');
             await fetchArchiveSchedules({variables: {filter: {login: {contains: sAMAccountName}}}});
         }
         catch(err) {
+            setConfirmTextValue('');
             msgError(err.message)
         }
     }
 
     useEffect(()=>{
         if (!isOpen) return;
-        handleFetchArchiveSchedules();
+        const fetchData = async () => {
+            await handleFetchArchiveSchedules();
+        }
+        fetchData()
     },[isOpen, sAMAccountName])
 
     const handleSearch = (value) => {
