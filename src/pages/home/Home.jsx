@@ -16,14 +16,14 @@ import { SettingOutlined, LogoutOutlined, SearchOutlined } from "@ant-design/ico
 import { gql } from '@apollo/client'
 import { useMutation, useLazyQuery } from "@apollo/client/react";
 import { useAuth } from "../../context/AuthContext";
-import UserCard from "./components/user/UserCard";
+import UserListItem from "./components/user/UserListItem";
 import UserInfo from "./components/user/UserInfo";
 import FooterInfo from "./components/layout/FooterInfo";
 import TableData from "./components/schedule/TableData";
 import {CustomMessageProvider} from "../../context/MessageContext";
 import ServiceSettingsModal from "./components/service-settings/ServiceSettingsModal";
+import GradientText from "./components/splash-text/GradientText";
 import "./Home.css"
-
 
 const LOGOUT_USER = gql`
     mutation {
@@ -158,13 +158,26 @@ const HomePage = () => {
         >
             <Header className="main-header-block">
                 <Flex style={{width:'500px'}}>
-                    <img src="./Logo.png" alt="logo" 
+                    <img src="/Logo.png" alt="logo" 
                         style={{
                             objectFit: 'contain',
                             width:'50px'
                         }}
                     />
-                    <h2 className="main-logo-text">WEB AD Tools</h2>
+                    <GradientText
+                        colors={[
+                            "rgb(64, 163, 255)",
+                            "rgb(165, 160, 244)",
+                            "rgb(64, 163, 255)",
+                            "rgb(165, 160, 244)",
+                            "rgb(64, 163, 255)"
+                        ]}
+                        animationSpeed={20}
+                        showBorder={false}
+                        className="main-logo-text"
+                    >
+                        WEB AD Tools
+                    </GradientText>
                 </Flex>
                 <Menu 
                     mode='horizontal'
@@ -251,7 +264,7 @@ const HomePage = () => {
                                         style={{animationDelay: `${index*0.1}s`}}
                                         onClick={()=>handleSelectedCard(userInfo)}
                                     >
-                                        <UserCard 
+                                        <UserListItem 
                                             isActive={userInfo.sAMAccountName === selectedUserCard?.sAMAccountName}
                                             fio={userInfo.cn}
                                             department={userInfo.department}
@@ -298,9 +311,6 @@ const HomePage = () => {
                             minHeight: 0,
                         }}>
                             <TableData 
-                                onError={(error) => { 
-                                    openNotification(`Ошибка при попытке отображения данных в таблице: ${error}`,'error')
-                                }}
                                 onHidden={handleHiddenUserChange}
                                 searchValue={tableSearchValue}
                             />
@@ -318,7 +328,7 @@ const HomePage = () => {
                     overflow:'hidden'
                 }}
             >
-                <FooterInfo  onError={(error) => { 
+                <FooterInfo  onErrorCallBack={(error) => { 
                     openNotification(`Ошибка при попытке получения информации о задаче: ${error}`,'error')
                  }}/>
             </Footer>

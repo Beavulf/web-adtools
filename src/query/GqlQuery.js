@@ -1,10 +1,8 @@
 import { gql } from '@apollo/client'
 
 const GET_SCHEDULES = gql`
-    query GetSchedules($fio: String) {
-    getSchedules(filter: {
-        fio: { contains: $fio },
-    }) {
+query GetSchedules($filter: ScheduleFilterInput!) {
+    getSchedules(filter: $filter) {
         id
         fio
         login
@@ -86,11 +84,34 @@ const GET_ARCHIVE_SCHEDULES = gql`
 }
 `;
 
+const GET_FIO_SCHEDULES = gql`
+query GetSchedules($filter: ScheduleFilterInput!) {
+    getSchedules(filter: $filter) {
+        id
+        fio
+        login
+    }
+}
+`;
+
+const GET_FIO_ARCHIVE_SCHEDULES = gql`
+    query GetArchiveSchedules($filter: ScheduleFilterInput!) {
+        getArchiveSchedules(filter: $filter) 
+    {
+        id
+        fio
+        login
+    }
+}
+`;
+
 export {
     GET_SCHEDULES, 
     CREATE_SCHEDULE, 
     DELETE_SCHEDULE, 
     ARCHIVE_SCHEDULE, 
     GET_ARCHIVE_SCHEDULES,
-    GET_SCHEDULES_FILTER
+    GET_SCHEDULES_FILTER,
+    GET_FIO_SCHEDULES,
+    GET_FIO_ARCHIVE_SCHEDULES
 };

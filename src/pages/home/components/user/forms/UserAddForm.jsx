@@ -24,7 +24,7 @@ const UserAddForm = React.memo(({selectedUser, handleModalClose}) => {
 
     const [createSchedule, { loading: loadingSchedule, error: errorSchedule }] = useMutation(CREATE_SCHEDULE, {
         refetchQueries: [
-            { query: GET_SCHEDULES }
+            { query: GET_SCHEDULES, variables: {filter: {}} }
         ]
     });
 

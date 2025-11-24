@@ -14,6 +14,8 @@ import { gql } from '@apollo/client'
 import { useMutation } from "@apollo/client/react";
 import { useNavigate } from "react-router-dom";
 import { LoginOutlined, UserOutlined, LockOutlined } from "@ant-design/icons";
+import Iridescence from "./Iridescence/Iridescence.jsx"
+// import Iridescence from './Iridescence';
 
 // запрос на атворизацию пользователя и получение токена
 const AUTH_USER = gql`
@@ -117,22 +119,29 @@ const LoginPage = () => {
   };
 
   return (
-    <div 
+    <Iridescence 
+      color={[1, 1, 1]}
+      mouseReact={false}
+      amplitude={0.1}
+      speed={1.0}
       style={{
-        height: '100vh', backgroundColor: 'rgb(169, 205, 245)', width: "100vw",
-        backgroundImage: 'url(/BGLogin.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
         opacity: isVisible ? 1 : 0,
         transition: 'opacity 0.4s ease-out', 
       }}
     >
       <div style={{
-        display: "flex", justifyContent: "center", alignItems: "center", height: "100%",
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center",
+        zIndex: 1,
         transform: isVisible ? 'scale(1)' : 'scale(0.8)',
         opacity: isVisible ? 1 : 0,
-        transition: 'transform 0.4s ease-out, opacity 0.4s ease-out', 
+        transition: 'transform 0.4s ease-out, opacity 0.4s ease-out',
       }}>
         {contextHolder}
         <Card 
@@ -156,10 +165,10 @@ const LoginPage = () => {
               validateDebounce={500} 
               rules={[{ required: true, message: "Введите логин", min:6 }]}
             >
-              <Input placeholder="User name"/>
+              <Input prefix={<UserOutlined />} placeholder="User name"/>
             </Form.Item>
             <Form.Item name="password" rules={[{ required: true, message: "Введите пароль" }]}>
-              <Input.Password placeholder="Пароль" />
+              <Input.Password prefix={<LockOutlined />} placeholder="Пароль" />
             </Form.Item>
             <Form.Item style={{marginBottom:0}}>
               <Button 
@@ -183,7 +192,7 @@ const LoginPage = () => {
           </Form>
         </Card>
       </div>
-    </div>
+    </Iridescence>
   )
 }
 

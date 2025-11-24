@@ -15,7 +15,7 @@ import scheduleColumns from "../../schedule/ScheduleColumns";
 import { useCustomMessage } from "../../../../../context/MessageContext";
 import useArchiveStatistics from '../../../../../hooks/user/useArchiveStatistics'
 import filterSchedules from '../../../../../utils/filterSchedules'
-import UserReacllInfo from "../../schedule/UserRecallInfo";
+import UserRecallInfo from "../../schedule/UserRecallInfo";
 
 const {Search} = Input
 const {Text} = Typography
@@ -136,7 +136,7 @@ const UserArchiveHistory = React.memo(({sAMAccountName, isOpen, onCancel})=>{
                 loading={loadingArchiveSchedules}
                 scroll={{y:'600px'}}
                 expandable={{
-                    expandedRowRender: (record) => <UserReacllInfo record={record} isArchive={true}/>,
+                    expandedRowRender: (record) => <UserRecallInfo record={record} isArchive={true}/>,
                 }}
             />
         </Flex>

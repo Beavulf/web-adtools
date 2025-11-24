@@ -23,6 +23,11 @@ const GET_RECALLS = gql`
         createdAt
         createdBy
         description
+        scheduleId
+        schedule {
+            fio
+            login
+        }
     }
 }
 `;

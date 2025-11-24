@@ -1,40 +1,40 @@
-import React, {useState, useCallback, useEffect} from "react";
+/**
+ * UserInfoAction — панель действий для выбранного пользователя.
+ * 
+ * Содержит кнопки для:
+ * - Добавления пользователя
+ * - Добавления разовой задачи
+ * - Просмотра архивной истории задач пользователя
+ * - Поиска задач пользователя в расписании
+ * 
+ * Также отображает триггеры статистики по задачам (выполненные, проваленные, все разовые).
+ *
+ * @component
+ * @param {Object} props
+ * @param {Object} props.selectedUser - Текущий выбранный пользователь (объект пользователя или null)
+ * @param {Function} props.onTableSearch - Функция для поиска задачи пользователя в таблице расписания по sAMAccountName
+ *
+ * Компонент адаптирован под Ant Design Flex, поддерживает адаптивную верстку.
+ */
+import React, {useState, useCallback} from "react";
 import { 
     Button,
     Flex,
-    Modal,
-    Popover,
-    Typography,
     Divider,
-    Badge
-} from "antd"
+} from "antd";
 import { 
-    FileSearchOutlined,
     SearchOutlined, 
-    AppstoreAddOutlined, 
-    FileAddOutlined, 
-    ProfileOutlined,
-    FileDoneOutlined,
-    FileExclamationOutlined
- } from "@ant-design/icons";
-import UserAddForm from "./forms/UserAddForm";
-import UserOneTimeForm from "./forms/UserOneTimeForm";
-import UserArchiveHistory from "./forms/UserArchiveHistory";
-import AllOneTimeModal from "./forms/onetime/AllOneTimeModal";
-import FailedTaskModal from "../schedule-statistics/FailedTaskModal";
-import fetchCronLogData from "../../../../utils/fetchCronLogData";
-import CompletedTaskModal from "../schedule-statistics/CompletedTaskModal";
+} from "@ant-design/icons";
+import FailedStatisticsTrigger from "../schedule-statistics/FailedStatisticsTrigger";
+import CompletedStatisticsTrigger from "../schedule-statistics/CompletedStatisticsTrigger";
+import AllOneTimeTrigger from "./forms/onetime/AllOneTimeTrigger";
+import UserAddModal from "./forms/UserAddModal";
+import UserOneTimeModal from "./forms/UserOneTimeModal";
+import UserArchiveHistoryTrigger from "./forms/UserArchiveHistoryTrigger";
 import './UserInfo.css'
-import dayjs from "dayjs";
-
-const {Text} = Typography;
 
 const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isModalOneTimeOpen, setIsModalOneTimeOpen] = useState(false);
-    const [isModalGetHistoryOpen, setIsModalGetHistoryOpen] = useState(false);
     const [isSearchActive, setIsSearchActive] = useState(false);
-    const [isModalAllOneTimeOpen, setIsModalAllOneTimeOpen] = useState(false);
 
     // поиск задачи в расписании по лоигну
     const handleFindInSchedule = useCallback(() => {
@@ -47,131 +47,15 @@ const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
         }
     }, [selectedUser, onTableSearch, isSearchActive]);
 
-    const handleModalOpen = () => {
-        setIsModalOpen(true);
-    }
-
-    const handleModalClose = useCallback(() => {
-        setIsModalOpen(false);
-    }, []);
-
-    const handleModalOneTimeOpen = () => {
-        setIsModalOneTimeOpen(true);
-    }
-
-    const handleModalOneTimeClose = useCallback(() => {
-        setIsModalOneTimeOpen(false);
-    }, []);
-
-    const handleModalGetHistoryOpen = () => {
-        setIsModalGetHistoryOpen(true);
-    }
-
-    const handleModalGetHistoryClose = useCallback(() => {
-        setIsModalGetHistoryOpen(false);
-    }, []);
-
-    const handleModalAllOneTimeOpen = () => {
-        setIsModalAllOneTimeOpen(true);
-    }
-
-    const handleModalAllOneTimeClose = useCallback(() => {
-        setIsModalAllOneTimeOpen(false);
-    }, []);
-
-    // кнопка для открытия модального окна
-    const FailedStatisticsTrigger = React.memo(()=> {
-        const [open, setOpen] = React.useState(false);
-        const [countRecordsBadge, setCountRecordsBadge] = useState(0)
-
-        useEffect(()=>{
-            const fetchData = async () => {
-                try {
-                    const data = await fetchCronLogData('http://localhost:3000/api/logs/not-found/', dayjs().format('YYYY-MM-DD'));
-                    setCountRecordsBadge(data.length)
-                }
-                catch(err) {
-                    console.error(err); 
-                }
-            };
-            fetchData();
-        },[])
-
-        return (
-            <Flex style={{height:'100%', flex:0.2}}>
-                <Badge style={{padding:'0 3px'}}  size="small" count={countRecordsBadge}>
-                <Popover content={<Text>Просмотреть список задач которые не выполнились</Text>}>
-                        <Button 
-                            icon={<FileExclamationOutlined />} 
-                            onClick={()=>setOpen(true)}
-                        ></Button>
-                </Popover>
-                </Badge>
-
-                <FailedTaskModal isOpen={open} onCancel={()=>setOpen(false)} />
-            </Flex>
-        );
-    });
-
-    const CompleatedStatisticsTrigger = React.memo(()=> {
-        const [open, setOpen] = React.useState(false);
-        // const [countRecordsBadge, setCountRecordsBadge] = useState(0)
-
-        return (
-            <Flex style={{height:'100%', flex:0.2}}>
-                <Badge style={{padding:'0 3px'}} size="small" count={55} color="green">
-                    <Popover content={<Text>Просмотреть список задач выполненных сегодня</Text>}>
-                        <Button 
-                            icon={<FileDoneOutlined  />} 
-                            style={{height:'100%', flex:0.2}}
-                            onClick={()=>setOpen(true)}
-                        ></Button>
-                    </Popover>
-                </Badge>
-
-                <CompletedTaskModal isOpen={open} onCancel={()=>setOpen(false)} />
-            </Flex>
-        );
-    });
-
     return (
-        <Flex  style={{flex:1, marginBottom:'11px', marginTop:'11px'}}>
+        <Flex style={{flex:1, marginBottom:'11px', marginTop:'11px'}}>
             <Flex vertical gap={10}>
                 <Flex vertical flex={1} gap={10}>
-                    <Button 
-                        className="action-main"
-                        type="primary" 
-                        block 
-                        icon={<AppstoreAddOutlined/>} 
-                        iconPosition="end" 
-                        disabled={!selectedUser}
-                        onClick={handleModalOpen}
-                        title="Добавить новую задачу в расписание на выбранного сотрудника"
-                    >Добавить в расписание</Button>
-                    <Flex flex={1} gap={10}>
-                        <Button 
-                            type="dashed" 
-                            icon={<FileAddOutlined/>} 
-                            iconPosition="end" 
-                            style={{height:'100%', flex:1, whiteSpace:'normal'}}
-                            disabled={!selectedUser}
-                            onClick={handleModalOneTimeOpen}
-                            title="Добавить разовую задачу на выбранного сотрудника"
-                        >Добавить разовую задачу</Button>
-                        
-                    </Flex>
+                    <UserAddModal selectedUser={selectedUser}/>
+                    <UserOneTimeModal selectedUser={selectedUser}/>
                 </Flex>
-                <Flex gap={10} flex={0.5} >
-                    <Button 
-                        disabled={!selectedUser} 
-                        style={{height:'100%', whiteSpace:'normal'}} 
-                        icon={<FileSearchOutlined/>} 
-                        iconPosition="end" 
-                        onClick={handleModalGetHistoryOpen}
-                        title="Просмотр архивной истории задач выбранного сотрудника"
-                    >
-                        Просмотреть историю
-                    </Button>
+                <Flex gap={10} flex={0.46} >
+                    <UserArchiveHistoryTrigger selectedUser={selectedUser}/>
                     <Button 
                         disabled={!selectedUser} 
                         style={{
@@ -189,59 +73,15 @@ const UserInfoAction = React.memo(({selectedUser, onTableSearch}) => {
                     </Button>
                 </Flex>
             </Flex>
+
             <Divider type="vertical" style={{height:'100%'}}/>
+            {/* боковой блок с кнопками статистики*/}
             <Flex vertical gap={10} style={{width:'50px'}} justify="center">
-                <Popover content={<Text>Просмотреть список разовых задач</Text>}>
-                    <Button 
-                        icon={<ProfileOutlined/>} 
-                        style={{height:'100%', flex:0.2}}
-                        onClick={handleModalAllOneTimeOpen}
-                    ></Button>
-                </Popover>
-                <CompleatedStatisticsTrigger/>
+                <AllOneTimeTrigger/>
+                <CompletedStatisticsTrigger/>
                 <FailedStatisticsTrigger/>
             </Flex>
 
-            {/* модальное окно добавления задачи */}
-            <Modal
-                title='Добавление новой задачи'
-                open={isModalOpen}
-                onCancel={handleModalClose}
-                footer={null}
-                destroyOnHidden
-            >
-                <UserAddForm 
-                    selectedUser={selectedUser}
-                    handleModalClose={handleModalClose}
-                />
-            </Modal>
-
-            {/* модальное окно добавления разовой задачи*/}
-            <Modal
-                title='Добавление разовой задачи'
-                open={isModalOneTimeOpen}
-                onCancel={handleModalOneTimeClose}
-                footer={null}
-                destroyOnHidden
-            >
-                <UserOneTimeForm 
-                    selectedUser={selectedUser}
-                    handleModalClose={handleModalOneTimeClose}
-                />
-            </Modal>
-
-            {/* модальное окно просмотра истории задач*/}
-            <UserArchiveHistory 
-                sAMAccountName={selectedUser?.sAMAccountName}
-                isOpen={isModalGetHistoryOpen}
-                onCancel={handleModalGetHistoryClose}
-            />
-
-            <AllOneTimeModal 
-                onOpen={isModalAllOneTimeOpen} 
-                onCancel={handleModalAllOneTimeClose}
-                selectedUser={selectedUser}
-            />
         </Flex>
     )
 });

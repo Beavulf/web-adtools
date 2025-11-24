@@ -1,7 +1,12 @@
 /**
- * ServiceSettingsModal — модальное окно управления cron-службой.
- * Показывает текущее расписание, статус, позволяет запускать/останавливать и выполнять «горячий запуск».
- * Важно: после «горячего запуска» вручную обновляем расписания (GET_SCHEDULES), чтобы UI сразу отобразил изменения.
+ * Модальное окно для отображения и управления состоянием службы Active Directory.
+ * Позволяет запускать и останавливать задачу с помощью кнопок и показывает актуальный статус.
+ * Использует Ant Design и styled-components для оформления.
+ *
+ * @component
+ * @param {Object} props
+ * @param {boolean} isOpen - Флаг открытия модального окна.
+ * @param {Function} onCancel - Колбэк на закрытие модального окна.
  */
 
 import React, {useState, useEffect} from "react";
@@ -17,7 +22,8 @@ import {
     message,
 } from 'antd'
 import { CheckCircleOutlined, ReloadOutlined } from "@ant-design/icons";
-import { useCronTask } from "../../../../hooks/services/useCronTask";
+import { useCronTask } from "../../../../hooks/api/useCronTask";
+import timeLeft from "../../../../utils/formatTimeLeft";
 import styled from "styled-components";
 import dayjs from "dayjs";
 
@@ -34,11 +40,14 @@ const StyledCheckIcon = styled(CheckCircleOutlined)`
 `;
 
 const {Text} = Typography;
-const taskName = 'handleUserBlockingSchedule'
+const taskName = import.meta.env.VITE_APP_TASK_NAME;
 
 const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
     const [messageApi, contextHolder] = message.useMessage();
-    const {taskInfo, loading, actions, error: errorTaskInfo} = useCronTask(taskName, {enabled: isOpen, onError: (err)=> messageApi.error(err.message)}) 
+    const {taskInfo, loading, actions, error: errorTaskInfo} = useCronTask({
+        enabled: isOpen, onError: (err)=> messageApi.error(`Ошибка при работе со службой: ${err.message}`)
+    }) 
+    const time = timeLeft(taskInfo?.getTimeout);
 
     const handleStopTask = async () => {
         try {
@@ -137,6 +146,7 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
                                     >
                                         <StyledCheckIcon 
                                             title="Сохранить измнения" 
+                                            disabled={loading.update} 
                                         />
                                     </Popconfirm>
                                 }
@@ -157,13 +167,13 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
                                     5-й (): день недели (любые дни недели)<br></br>
                                 </Flex>
                             </Flex>
-                            <Flex>
-                                
+                            <Flex style={{marginLeft:'13px'}}>
+                                *по умолчанию стоит - каждые 10 часов в промежутке с 0 до 23 часов*<br></br>
                             </Flex>
                         </Flex>
                         <Flex justify="space-between" style={{margin:'0'}}>
                             <Text>Дата след. сработки: {taskInfo?.sendAt}</Text>
-                            <Text>Время до след сработки: {taskInfo?.getTimeout}</Text>
+                            <Text>Время до след сработки: {time}</Text>
                         </Flex>
                         <Flex justify="space-between" style={{margin:'0'}}>
                             <Text>Следующий запуск: {dayjs(taskInfo?.nextDate).format('DD.MM.YYYY HH:mm:ss')}</Text>
@@ -193,6 +203,8 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
                                     color="orange" 
                                     variant="filled" 
                                     title="Прямо сейчас выполнить задачи"
+                                    loading={loading.fireOnTick}
+                                    disabled={!taskInfo?.isActive || loading.fireOnTick}
                                     >Горячий запуск
                                 </Button>
                             </Popconfirm>
@@ -202,6 +214,7 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
                                 variant="filled"
                                 onClick={async ()=> await handleStopTask()}
                                 loading={loading.stop}
+                                disabled={!taskInfo?.isActive}
                                 title="Остановить службу на сервере"
                                 >Остановить
                             </Button>

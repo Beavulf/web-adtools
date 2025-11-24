@@ -1,23 +1,33 @@
-import React, {useState, useEffect} from "react";
+/**
+ * @file CompletedTaskModal.jsx
+ * @description Модальное окно для отображения задач и отзывов, выполненных сегодня и завершённых вчера.
+ * Используется для статистики завершённых задач в системе WEB AD Tools.
+ * 
+ * Включает получение данных через GraphQL-запросы, отображение списков задач и отзывов.
+ *
+ * Использует Ant Design компоненты (Modal, Typography, Flex, List, Button, Popover, Tag) для построения UI.
+ * 
+ * @author Junior Developer
+ */
+
+import React, {useEffect, useMemo, useCallback} from "react";
 import {
     Modal,
     Typography,
     Flex,
     List,
-    Input,
-    Button
+    Button,
+    Popover,
+    Tag
 } from 'antd'
 import dayjs from "dayjs";
-import { UserOutlined } from "@ant-design/icons";
 import { useCustomMessage } from "../../../../context/MessageContext";
-import { useLazyQuery } from "@apollo/client/react";
-import { GET_SCHEDULES_FILTER } from "../../../../query/GqlQuery";
-import { GET_RECALLS } from "../../../../query/RecallQuery";
-import { GET_ARCHIVE_SCHEDULES } from "../../../../query/GqlQuery";
-import { GET_ARCHIVE_RECALLS } from "../../../../query/RecallQuery";
+import { SyncOutlined } from "@ant-design/icons";
+import {useSchedule} from '../../../../hooks/api/useSchedule'
+import {useRecall} from '../../../../hooks/api/useRecall'
 
 const {Text} = Typography;
-const {Search} = Input;
+
 // поиск задач выполненых сегодня, без отзыва
 const scheduleFilter = {
     filter: { 
@@ -26,18 +36,21 @@ const scheduleFilter = {
         isRecall: false
     }
 }
+// получение отзывов выполненных сегодня
 const recallsFilter = {
     filter: { 
         startDate: {equals: dayjs().format('YYYY-MM-DD')},
         status: true
     }
 }
+// получение задач каоторые завершили свое выполнение сегодня
 const archiveScheduleFilter = {
     filter: { 
         endDate: {equals: dayjs().subtract(1, 'day').format('YYYY-MM-DD')},
         status: true,
     }
 }
+// получение отзывов каоторые завершили свое выполнение сегодня
 const archiveRecallsFilter = {
     filter: { 
         endDate: {equals: dayjs().subtract(1, 'day').format('YYYY-MM-DD')},
@@ -46,38 +59,57 @@ const archiveRecallsFilter = {
 
 const CompletedTaskModal = React.memo(({isOpen, onCancel})=>{
     const {msgError} = useCustomMessage();
+    const {
+        actions: actionsSchedule, 
+        loading: loadingSchedules, 
+        fetchSchedulesData, 
+        fetchFioArchiveScheduleData, 
+        fetchFioScheduleData,
+        fetchArchiveSchedulesData
+    } = useSchedule({onError: (error)=> msgError(`Ошибка при загрузке выполненных задач: ${error.message}`)});
+    const {
+        actions: actionsRecall, 
+        loading: loadingRecall, 
+        fetchRecallsData, 
+        fetchArchiveRecallsData,
+        fetchArchiveRecalls
+    } = useRecall({onError: (error)=> msgError(`Ошибка при загрузке отзывов:${error.message}`)});
 
-    const [fetchSchedules, {data: dataSchedules}] = useLazyQuery(GET_SCHEDULES_FILTER, {
-        fetchPolicy: 'cache-and-network',
-    });
-    const [fetchRecalls, {data: dataRecalls}] = useLazyQuery(GET_RECALLS,{
-        fetchPolicy: 'cache-and-network',
-    });
-    const [fetchArchiveSchedules, {data: dataArchiveSchedules}] = useLazyQuery(GET_ARCHIVE_SCHEDULES,{
-        fetchPolicy: 'cache-and-network',
-    });
-    const [fetchArchiveRecalls, {data: dataArchiveRecalls}] = useLazyQuery(GET_ARCHIVE_RECALLS,{
-        fetchPolicy: 'cache-and-network',
-    });
+    // для обьеденение массивов с найденным данными из разных запросов
+    const allSchedule = useMemo(()=>{
+        return [...fetchSchedulesData || [], ...fetchArchiveSchedulesData || []]
+    },[fetchSchedulesData, fetchArchiveSchedulesData]);
+    const allRecalls = useMemo(()=>{
+        return [...fetchRecallsData || [], ...fetchArchiveRecalls || []]
+    },[fetchRecallsData, fetchArchiveRecalls]);
 
-    const handleClickToFetch = async () => {
-        await fetchSchedules({variables: scheduleFilter});
-        await fetchRecalls({variables: recallsFilter})
-        await fetchArchiveSchedules({variables: archiveScheduleFilter});
-        await fetchArchiveRecalls({variables: archiveRecallsFilter});
-        console.log(dataSchedules);
-        console.log(dataRecalls);
-        console.log(dataArchiveSchedules);
-        console.log(dataArchiveRecalls);
+    // для получения всех задачи и отзывов
+    const handleFetchData = async () => {
+        await actionsSchedule.fetchSchedules({variables: scheduleFilter});
+        await actionsRecall.fetchRecalls({variables: recallsFilter})
+        await actionsSchedule.fetchArchiveSchedules({variables: archiveScheduleFilter});
+        await actionsRecall.fetchArchiveRecalls({variables: archiveRecallsFilter});
     }
 
+    // получение фио для отзывов архивных
+    const handleFetchFioForArchiveRecalls = async () => {
+        const scheduleIds = fetchArchiveRecallsData.map(item => item.scheduleId);
+        if (!scheduleIds) return;
+        try {
+            await actionsSchedule.fetchFioSchedule({variables: {filter:{id:{in:scheduleIds}}}});
+            await actionsSchedule.fetchFioArchiveSchedule({variables: {filter:{id:{in:scheduleIds}}}});
+        }
+        catch(err){
+            msgError(`Ошибка при получении ФИО для отзывов: ${err.message}`)
+        }
+    }
+    
     useEffect(()=>{
         if (!isOpen) return;
 
         const fetchData = async () => {
             try {
-                await fetchSchedules({variables: scheduleFilter});
-                await fetchRecalls({variables: recallsFilter})
+                await handleFetchData();
             }
             catch(err) {
                 msgError(`Ошибка при загрузке выполненных задач: ${err.message}`)
@@ -86,21 +118,81 @@ const CompletedTaskModal = React.memo(({isOpen, onCancel})=>{
         fetchData();
     },[isOpen])
     
+    // для отображения фио в списке после прогрузки всего
+    useEffect(() => {
+        if (!isOpen) return;
+        handleFetchFioForArchiveRecalls();
+    }, [isOpen, fetchArchiveRecallsData]);
 
-    const CompletedListItem = (item) => {
+    const ListItemSchedules = useCallback((item) => {
+        const isStart = dayjs(item.startDate).format('DD.MM.YYYY') === dayjs().format('DD.MM.YYYY');
         return (
             <List.Item>
                 <List.Item.Meta
-                    avatar={<UserOutlined/>}
-                    title={<Text>{item}</Text>}
+                    avatar={
+                        <Tag color={isStart ? 'green' : 'orange'}>{isStart ? 'старт' : 'конец'}</Tag>
+                    }
+                    title={<Text>{item.fio} ({item.login})</Text>}
+                    description={
+                        <Flex align="center" gap={10}>
+                            <span>{item.order}</span> -
+                            <span>{dayjs(item.startDate).format('DD.MM.YYYY')} по {dayjs(item.endDate).format('DD.MM.YYYY')}</span>
+                            <span>(созд. {item.createdBy})</span>
+                        </Flex>
+                    }
                 />
             </List.Item>
         )
-    }
+    },[]);
+
+    const ListItemRecalls = useCallback((item) => {
+        const isStart = dayjs(item.startDate).format('DD.MM.YYYY') === dayjs().format('DD.MM.YYYY');
+        const fioAndLogin = item?.schedule || 
+            fetchFioArchiveScheduleData.find(row => row.id === item.scheduleId) || 
+            fetchFioScheduleData.find(row => row.id === item.scheduleId);
+        return (
+            <List.Item>
+                <List.Item.Meta
+                    avatar={
+                        <Tag color={isStart ? 'green' : 'orange'}>{isStart ? 'старт' : 'конец'}</Tag>
+                    }
+                    title={
+                        <Text>{fioAndLogin?.fio || 'Архивированнный'} ({fioAndLogin?.login || 'Архивированнный'})</Text>
+                    }
+                    description={
+                        <Flex align="center" gap={10}>
+                            <span>Отзыв {item.order}</span> -
+                            <span>{dayjs(item.startDate).format('DD.MM.YYYY')} по {dayjs(item.endDate).format('DD.MM.YYYY')}</span>
+                            <span>(созд. {item.createdBy})</span>
+                        </Flex>                        
+                    }
+                />
+            </List.Item>
+        )
+    },[fetchFioArchiveScheduleData, fetchFioScheduleData]);
+    
+    const ListHeader = ({text}) => {
+        return (
+            <Flex align="center" justify="space-between">
+                <Text>{text}</Text>
+            </Flex>
+        )
+    };
 
     return (
         <Modal
-            title={<Text>Список выполненных задач</Text>}
+            title={
+                <Flex align="center" gap={10}>
+                    <Text>Список выполненных задач</Text>
+                    <Popover content={<Text>Синхронизировать данные с БД</Text>}>
+                        <Button 
+                            loading={Object.values(loadingSchedules).some(Boolean) || Object.values(loadingRecall).some(Boolean)} 
+                            onClick={handleFetchData} 
+                            icon={<SyncOutlined/>}>обновить
+                        </Button>
+                    </Popover>
+                </Flex>
+            }
             open={isOpen}
             onCancel={onCancel}
             footer={null}
@@ -108,13 +200,24 @@ const CompletedTaskModal = React.memo(({isOpen, onCancel})=>{
             destroyOnHidden
             style={{overflow:'auto'}}
         >
-            <List
-                header={<Text>HEADER <Button onClick={handleClickToFetch}>LOG</Button></Text>}
-                bordered
-                // dataSource={fileNotFoundData}
-                renderItem={CompletedListItem}
-                style={{maxHeight:'700px', overflow:'auto'}}
-            />
+            <Flex gap={10}>
+                <List
+                    header={<ListHeader text="Основные задачи"/>}
+                    bordered
+                    dataSource={allSchedule}
+                    renderItem={ListItemSchedules}
+                    style={{maxHeight:'700px', overflow:'auto', flex:1, }}
+                    loading={Object.values(loadingSchedules).some(Boolean)}
+                />
+                <List
+                    header={<ListHeader text="Отзывы"/>}
+                    bordered
+                    dataSource={allRecalls}
+                    renderItem={ListItemRecalls}
+                    style={{maxHeight:'700px', overflow:'auto', flex:1, }}
+                    loading={Object.values(loadingRecall).some(Boolean)}                   
+                />
+            </Flex>
         </Modal>
     )
 })
