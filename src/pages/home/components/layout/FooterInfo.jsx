@@ -1,18 +1,16 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { Flex, Tag } from "antd";
 import { useCronTask } from "../../../../hooks/api/useCronTask";
 import timeLeft from "../../../../utils/formatTimeLeft";
 
-const FooterInfo = React.memo(({onErrorCallBack}) => {
-    const {taskInfo, error: errorTaskInfo} = useCronTask({enabled: true, pollInterval: 60000});
+const FooterInfo = React.memo(({notification}) => {
+    const { taskInfo } = useCronTask({enabled: true, pollInterval: 60000,
+        onError: (error) => {
+            notification(`Ошибка при работе с задачей: ${error}`, 'error')
+        }
+    });
 
     const time = timeLeft(taskInfo?.getTimeout);
-
-    useEffect(()=>{
-        if (errorTaskInfo) {
-            onErrorCallBack(errorTaskInfo.message);
-        }       
-    },[errorTaskInfo]);
 
     return (
         <Flex flex={1} style={{color:'rgba(255, 255, 255, 0.62)', padding:'0 10px'}}>

@@ -67,7 +67,7 @@ const RecallModal = React.memo(({isOpen, onCancel, record})=>{
                 <Card
                     title={<Text><UserOutlined/> {record?.fio}</Text>}
                     extra={record?.login}
-                    bodyStyle={{paddingBottom:'10px'}}
+                    styles={{body:{paddingBottom:'10px'}}}
                 >
                     <Flex vertical gap={10}>
                         <Space wrap style={{backgroundColor:'rgba(170, 210, 235, 0.1)', width:'100%', borderRadius:'8px', padding:'5px 10px', height:'40px'}}>

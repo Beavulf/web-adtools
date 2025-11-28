@@ -53,10 +53,7 @@ export function useOneTime(options = {}) {
         }
     }, [errorOneTimes, handleError]);
 
-    const [
-        fetchOneTimes,
-        { data: dataFetchOneTimes, loading: loadingFetchOneTimes }
-    ] = useLazyQuery(GET_ONETIME_TASKS, {
+    const [fetchOneTimes,{ data: dataFetchOneTimes, loading: loadingFetchOneTimes }] = useLazyQuery(GET_ONETIME_TASKS, {
         fetchPolicy: "network-only",
         onError: handleError
     });

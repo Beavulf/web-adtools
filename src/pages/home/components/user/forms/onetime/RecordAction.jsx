@@ -1,4 +1,18 @@
-import React, {} from "react";
+/**
+ * @component RecordAction
+ * @description
+ * Кнопки для управления одной разовой задачей сотрудника: Архивирование и Удаление.
+ * Используется внутри таблицы разовых задач. Показывает действия (иконки) с подтверждением.
+ * 
+ * @example
+ * <RecordAction record={rowData} />
+ * 
+ * Использует Ant Design (Flex, Popover, Popconfirm, Button), кастомные хуки для мутаций.
+ * Показывает всплывающие подсказки и сообщения о результате действия.
+ */
+
+
+import React from "react";
 import {
     Flex,
     Button,
@@ -6,33 +20,21 @@ import {
     Popconfirm,
     Typography
 } from 'antd'
-import { useMutation } from "@apollo/client/react";
 import { DeleteOutlined, FileZipOutlined } from "@ant-design/icons";
 import { useCustomMessage } from "../../../../../../context/MessageContext"
-import { DELETE_ONETIME_TASK, GET_ONETIME_TASKS, ARCHIVE_ONETINE_TASK } from "../../../../../../query/OneTimeQuery";
+import { useOneTime } from "../../../../../../hooks/api/useOneTime";
 
 const {Text} = Typography;
 
 const RecordAction = React.memo(({record}) => {
     const {msgSuccess, msgError} = useCustomMessage();
-
-    const [deleteOneTime, {loading: loadingDeleteOneTime}] = useMutation(DELETE_ONETIME_TASK, {
-        refetchQueries: [
-            { query: GET_ONETIME_TASKS, variables: { filter: {} }}
-        ],
-        awaitRefetchQueries: true,
-    });
-
-    const [archiveOneTime, {loading: loadingArchiveOneTime}] = useMutation(ARCHIVE_ONETINE_TASK, {
-        refetchQueries: [
-            { query: GET_ONETIME_TASKS, variables: { filter: {} }}
-        ],
-        awaitRefetchQueries: true,
-    });
+    const {actions, loading} = useOneTime({
+        onError: (error) => msgError(`Ошибка при работе с Разовыми задачами: ${error.message || error}`)
+    })
 
     const handleDeleteOneTime = async () => {
         try {
-            await deleteOneTime({variables: {id: record.id}})
+            await actions.deleteOneTime(record.id)
             msgSuccess('Задача удалена')
         }
         catch(err) {
@@ -42,7 +44,7 @@ const RecordAction = React.memo(({record}) => {
 
     const handleArchiveOneTime = async () => {
         try {
-            await archiveOneTime({variables: {id: record.id}})
+            await actions.archiveOneTime(record.id)
             msgSuccess('Задача перемещена в архив')
         }
         catch(err) {
@@ -60,7 +62,7 @@ const RecordAction = React.memo(({record}) => {
                     cancelText="Нет"
                     onConfirm={handleArchiveOneTime}
                 >
-                        <Button size="middle" icon={<FileZipOutlined />} loading={loadingArchiveOneTime}></Button>
+                    <Button size="middle" icon={<FileZipOutlined />} loading={loading.archive}></Button>
                 </Popconfirm>
             </Popover>
             <Popover content={<Text>Удаление записи из расписания</Text>}>
@@ -71,7 +73,7 @@ const RecordAction = React.memo(({record}) => {
                     cancelText="Нет"
                     onConfirm={handleDeleteOneTime}
                 >
-                        <Button size="middle" icon={<DeleteOutlined />} danger loading={loadingDeleteOneTime}></Button>
+                    <Button size="middle" icon={<DeleteOutlined />} danger loading={loading.delete}></Button>
                 </Popconfirm>
             </Popover>
         </Flex>

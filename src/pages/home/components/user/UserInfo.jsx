@@ -38,6 +38,7 @@ const EMPTY_USER_DATA = {
     isActive: '-'
 }
 
+// для подставления пустого шаблона если не выбран сотрудник
 const transformUserData = (selectedUser) => {
     if (!selectedUser) {
         return EMPTY_USER_DATA
@@ -56,6 +57,7 @@ const transformUserData = (selectedUser) => {
     }
 }
 
+// для ровного формирования карточек информации
 const gridStyle = {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr 1fr',
@@ -64,6 +66,7 @@ const gridStyle = {
 }
 
 const UserInfo = React.memo(({selectedUser, hidden, onTableSearch}) => {
+    // прогружаем информацию о выбранном сотруднике, либо подставляем пустой шаблон
     const userData = useMemo(() => transformUserData(selectedUser), [selectedUser]);
 
     return (

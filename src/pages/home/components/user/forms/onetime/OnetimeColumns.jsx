@@ -1,8 +1,21 @@
-import React, {} from "react";
+/**
+ * @component OneTimeColumns
+ * @description
+ * Описание колонок для таблицы разовых задач (OneTime). Используется для отображения информации о сотрудниках,
+ * их логинах, дате задачи и текущем действии (включить/выключить) в виде тегов. 
+ * Колонки включают сортировку и фильтрацию для удобства пользователя.
+ * 
+ * Пример использования — передать в Table компонент как columns:
+ * <Table columns={OneTimeColumns} dataSource={...} />
+ * 
+ * Использует Ant Design компоненты (Tag) и определяет форматирование дат и состояния.
+ */
+
+import React from "react";
 import { 
     Flex,
     Tag
-} from "antd"
+} from "antd";
 import RecordAction from "./RecordAction";
 
 const OneTimeColumns = [
@@ -55,7 +68,6 @@ const OneTimeColumns = [
         dataIndex: 'description',
         key: 'description',
         render: (text) => (text ? text : '-'),
-        width: 100,
         ellipsis: true,
     },
     {

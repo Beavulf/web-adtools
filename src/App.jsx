@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from './pages/login/Login'
 import HomePage from './pages/home/Home'
@@ -8,15 +9,24 @@ import './App.css'
 function App() {
 
   function PrivateRoute({children}){
-    const { isAuthenticated } = useAuth();
-    return isAuthenticated ? children : <Navigate to="/login" />
+    const { isAuthenticated, checkAuth } = useAuth();
+
+    useEffect(() => {
+      checkAuth();
+    }, [checkAuth]);
+
+    if (!isAuthenticated) {
+      return <Navigate to="/login" replace />;
+    }
+
+    return children;
   }
 
   return (
     <Routes>
       <Route path='/' element={
           <PrivateRoute>
-            <Navigate to='/main' />
+            <Navigate to='/main' replace />
           </PrivateRoute>
         } 
       />

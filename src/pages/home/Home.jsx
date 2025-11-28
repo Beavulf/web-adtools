@@ -2,70 +2,38 @@ import React, { useEffect, useCallback } from "react";
 import { useState } from "react";
 import { 
     notification, 
-    Space,
     Layout,
-    Menu,
-    Popover,
-    Input,
     Card,
-    Empty,
     Flex,
     Typography,
+    Popover
 } from "antd";
-import { SettingOutlined, LogoutOutlined, SearchOutlined } from "@ant-design/icons";
-import { gql } from '@apollo/client'
-import { useMutation, useLazyQuery } from "@apollo/client/react";
 import { useAuth } from "../../context/AuthContext";
-import UserListItem from "./components/user/UserListItem";
 import UserInfo from "./components/user/UserInfo";
 import FooterInfo from "./components/layout/FooterInfo";
 import TableData from "./components/schedule/TableData";
 import {CustomMessageProvider} from "../../context/MessageContext";
-import ServiceSettingsModal from "./components/service-settings/ServiceSettingsModal";
-import GradientText from "./components/splash-text/GradientText";
+import { useLdap } from "../../hooks/api/useLdap";
+import MainHeader from "./components/layout/MainHeader.jsx"
+import MainSider from "./components/layout/MainSider.jsx";
 import "./Home.css"
 
-const LOGOUT_USER = gql`
-    mutation {
-        logout
-    }
-`;
-
-const GET_USER_LDAP = gql`
-    query GetUsersLdap($cnOrSAMA: String!) {
-        searchUser(data: {cnOrSamaccountname: $cnOrSAMA}) {
-        cn,
-        sAMAccountName,
-        distinguishedName,
-        company,
-        department,
-        description,
-        memberOf,
-        title,
-        userAccountControl
-    }
-}
-`;
-
-const items= [
-    { key: '1', label: 'Главная' },
-    { key: '2', label: 'Архив' },
-]
-
-const {Header, Sider, Content, Footer} = Layout;
-const {Search} = Input
-const {Text, Paragraph} = Typography
+const { Header, Sider, Content, Footer } = Layout;
+const { Text } = Typography
 
 const HomePage = () => {
-    const [logoutServer, {loading: loadingLogoutServer, error: errorLogoutServer}] = useMutation(LOGOUT_USER);
     const { logout: logoutClient } = useAuth();
+    const { actions } = useLdap({
+        onError: (error) => {
+            openNotification(`Ошибка при работе с LDAP: ${error}`,'error')
+        } 
+    });
+    // выбранная карточка
+    const [selectedUserCard, setSelectedUserCard] = useState(null)
     // отображение информации о пользователе
     const [hiddenUserInfo, setHiddenUserInfo] = useState(false)
     
-    // выбранная карточка
-    const [selectedUserCard, setSelectedUserCard] = useState(null)
-    
-    // значение для поиска в таблице
+    // значение для поиска в таблице переданные через пропсы другого компонента
     const [tableSearchValue, setTableSearchValue] = useState("")
     const handleTableSearch = useCallback((searchValue) => {
         setTableSearchValue(searchValue);
@@ -90,37 +58,21 @@ const HomePage = () => {
         return () => clearTimeout(timer);
     },[])
 
+    // для оптимизации прогрузки таблицы
     const handleHiddenUserChange = useCallback((value) => {
         // гарантируем, что React не увидит обновление состояния во время рендера TableData
         Promise.resolve().then(() => setHiddenUserInfo(value));
     }, []);
-
-    // получение списка пользователей из LDAP
-    const [getUserInfo,{data: dataUserInfo, loading: loadingUserInfo, error: errorUserInfo}] = useLazyQuery(GET_USER_LDAP,{
-        fetchPolicy: 'network-only'
-    });
-
-    useEffect(()=>{
-        if (errorLogoutServer) {
-            openNotification(`Ошибка при попытке выхода из аккаунта: ${errorLogoutServer.message}`,'error')
-        }
-    },[errorLogoutServer])
-    useEffect(()=>{
-        if (errorUserInfo) {
-            openNotification(`Ошибка при попытке получения информации о пользователе: ${errorUserInfo.message}`,'error')
-        }
-    },[errorUserInfo])
-    //***********************************  
 
     // выбор карточки
     const handleSelectedCard = useCallback((cardKey) => {   
         setSelectedUserCard(prevSelected => cardKey === prevSelected ? null : cardKey)
     }, []);
 
-    // выход из аккаунта
+    // выход из аккаунта, на сервере анулирование токена и на клиенте
     const handleLogout = async () => {
         try {
-            await logoutServer()
+            await actions.logout()
             logoutClient()
        }
         catch(err) {
@@ -131,80 +83,18 @@ const HomePage = () => {
         }
     }
 
-    // легкий компонент для открытия модального окна настроек службы
-    function ServiceSettingsTrigger() {
-        const [open, setOpen] = React.useState(false);
-        return (
-            <>
-                <Popover content={<b>Открыть настройки службы</b>}>
-                    <SettingOutlined className="main-icon" onClick={()=>setOpen(true)} />
-                </Popover>
-                <ServiceSettingsModal isOpen={open} onCancel={()=>setOpen(false)} />
-            </>
-        );
-    }
-    
-    
     return (
-        <Layout style={{
+        <Layout 
+            style={{
                 height: '100%', 
                 background: 'linear-gradient(135deg,#91dce9 0%, #9992ed 50%, #a98ec4 100%)',
                 opacity: isVisible ? 1 : 0,
                 transition: 'opacity 0.4s ease-out', 
-                margin:0,
-                padding:0,
                 overflowX:'hidden'
             }}
         >
             <Header className="main-header-block">
-                <Flex style={{width:'500px'}}>
-                    <img src="/Logo.png" alt="logo" 
-                        style={{
-                            objectFit: 'contain',
-                            width:'50px'
-                        }}
-                    />
-                    <GradientText
-                        colors={[
-                            "rgb(64, 163, 255)",
-                            "rgb(165, 160, 244)",
-                            "rgb(64, 163, 255)",
-                            "rgb(165, 160, 244)",
-                            "rgb(64, 163, 255)"
-                        ]}
-                        animationSpeed={20}
-                        showBorder={false}
-                        className="main-logo-text"
-                    >
-                        WEB AD Tools
-                    </GradientText>
-                </Flex>
-                <Menu 
-                    mode='horizontal'
-                    items={items}
-                    theme="dark"
-                    defaultSelectedKeys={['1']}
-                    style={{
-                        flex:1,
-                        minWidth: 0,
-                        borderRadius:'8px',
-                        backgroundColor:'transparent',
-                        fontSize:'16px',
-                        color:'white',
-                        margin:'0 25px'
-                    }}
-                />
-
-                <div style={{ display:'flex', gap:'10px'}}>
-                    <ServiceSettingsTrigger/>
-                    <Popover content={<b>Выйти из программы</b>} trigger={'hover'}>
-                        <LogoutOutlined
-                            className="main-icon"
-                            onClick={handleLogout}
-                        />
-                    </Popover>
-                </div>
-
+                <MainHeader handleLogout={handleLogout}/>
             </Header>
             
             <Layout style={{ background: 'transparent', height:'100%'}}>
@@ -218,69 +108,11 @@ const HomePage = () => {
                         transition: 'transform 0.3s ease-out',
                     }}
                 >
-                    {/* Блок поиска сотрудников */}
-                    <Space direction='vertical' style={{
-                        display:'flex',
-                        padding:'20px',
-                        flex:'0 0 auto'
-                    }}>
-                        <div style={{display:'flex', alignItems:'center'}}>
-                            <Space direction='horizontal' size='small'>
-                                <Popover content="Поиск сотрудников в АД">
-                                    <SearchOutlined className="main-icon"/>
-                                </Popover>
-                                <h4 style={{fontSize:'24px',color:'rgb(255, 255, 255)'}}>Поиск сотрудников</h4>
-                            </Space>
-                            <h4 style={{margin:'5px 10px 0 auto',color:'white',fontSize:'20px', display:'flex', marginLeft:'auto'}}>
-                                {dataUserInfo?.searchUser?.length}
-                            </h4>
-                        </div>
-                        
-                        <Search 
-                            style={{marginRight:'10px'}}
-                            placeholder="Поиск по ФИО, логин..." 
-                            size="large"
-                            loading={loadingUserInfo}
-                            onSearch={async (value)=>{
-                                await getUserInfo({
-                                    variables:{cnOrSAMA: value}
-                                })
-                            }}
-                        />
-                    </Space>
-
-                    {/* список карточек найденных сотрудников */}
-                    <div style={{
-                        flex:'1 1 auto', 
-                        overflowY:'auto', 
-                        overflowX: 'hidden',
-                        minHeight:0,
-                    }}>
-                        {dataUserInfo?.searchUser?.length > 0 ? 
-                            (dataUserInfo?.searchUser?.map((userInfo,index)=>(
-                                    <div 
-                                        key={userInfo.sAMAccountName} 
-                                        className="user-card-wrapper"
-                                        style={{animationDelay: `${index*0.1}s`}}
-                                        onClick={()=>handleSelectedCard(userInfo)}
-                                    >
-                                        <UserListItem 
-                                            isActive={userInfo.sAMAccountName === selectedUserCard?.sAMAccountName}
-                                            fio={userInfo.cn}
-                                            department={userInfo.department}
-                                            description={userInfo.description}
-                                            ribbonText={userInfo.userAccountControl === '512' ? 'ВКЛЮЧЕНА' : 'ВЫКЛЮЧЕНА'}
-                                        />
-                                    </div>
-                                )
-                            )) : 
-                                <div style={{display:'flex', justifyContent:'center', alignItems:'center', height:'100%'}}>
-                                    <div className="empty-visible" style={{opacity: loadingUserInfo ? 0 : 1}}>
-                                        <Empty style={{fontSize:'24px'}}/>
-                                    </div>
-                                </div>
-                            }
-                    </div>
+                    <MainSider 
+                        handleSelectedCard={handleSelectedCard} 
+                        selectedUserCard={selectedUserCard} 
+                        openNotification={openNotification}
+                    />
                 </Sider>
                 
                 <CustomMessageProvider>
@@ -317,7 +149,6 @@ const HomePage = () => {
                         </Card>
                     </Content>
                 </CustomMessageProvider>
-
             </Layout>
 
             {/* футер */}
@@ -328,13 +159,13 @@ const HomePage = () => {
                     overflow:'hidden'
                 }}
             >
-                <FooterInfo  onErrorCallBack={(error) => { 
-                    openNotification(`Ошибка при попытке получения информации о задаче: ${error}`,'error')
-                 }}/>
+                <FooterInfo notification={openNotification}/>
             </Footer>
-            <div style={{margin:'0 0 0 auto', color:'rgba(255, 255, 255, 0.31)', textAlign:'center'}}>
-                Разработано: Цыганок Е.С. Дизайн совместно с Цыганок А.С.
-            </div>
+            <Flex justify="center">
+                <Popover content={'Разработано: Цыганок Е.С. Дизайн совместно с Цыганок А.С.'}>
+                    <Text style={{margin:0, fontSize:'12px', color:'lightgray'}}>РАЗРАБОТАНО</Text>
+                </Popover>
+            </Flex>
         </Layout>
     )
 }

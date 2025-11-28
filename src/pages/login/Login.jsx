@@ -1,3 +1,14 @@
+/**
+ * LoginPage
+ * Страница авторизации для приложения WEB AD Tools.
+ * - Использует Ant Design для отображения формы входа.
+ * - Подключает контекст авторизации (useAuth) для работы с JWT.
+ * - Выполняет GraphQL мутацию для получения accessToken.
+ * - Реализована поддержка "Запомнить меня" через localStorage.
+ * - Импортирует необходимые иконки и стили для современного UI.
+ * - Для анимации используется компонент Iridescence.
+ *
+ */
 import React from "react";
 import { useState, useEffect, useCallback } from "react";
 import { 
@@ -15,7 +26,6 @@ import { useMutation } from "@apollo/client/react";
 import { useNavigate } from "react-router-dom";
 import { LoginOutlined, UserOutlined, LockOutlined } from "@ant-design/icons";
 import Iridescence from "./Iridescence/Iridescence.jsx"
-// import Iridescence from './Iridescence';
 
 // запрос на атворизацию пользователя и получение токена
 const AUTH_USER = gql`
@@ -108,10 +118,10 @@ const LoginPage = () => {
           }
         }
       })
-      if (!data.auth.accessToken) throw new Error('Unauthorized')
+      if (!data.auth.accessToken) throw new Error('Unauthorized');
       login(data.auth.accessToken);
-      setRememberMe(values.username)
-      navigate('/main') 
+      setRememberMe(values.username);
+      navigate('/main');
     }
     catch(err) {
       handleAuthError(err);

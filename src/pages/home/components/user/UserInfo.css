@@ -83,7 +83,7 @@
 .action-main {
     flex: 1;
     background: linear-gradient(135deg, #91dce9 0%, #9992ed 50%, #a98ec4 100%);
-    border: 1px solid gray;
+    border: 1px solid lightgray;
     position: relative;
     overflow: hidden;
     z-index: 1;

@@ -14,7 +14,7 @@ import {GET_ONETIME_TASKS} from "../../query/OneTimeQuery"
 const taskName = import.meta.env.VITE_APP_TASK_NAME;
 
 export function useCronTask(options={}) {
-    const {enabled = true, onError, pollInterval} = options;
+    const {enabled = true, onError, pollInterval=120000} = options;
     const client = useApolloClient();
 
     const refetchTaskInfo = [{query: GET_TASK_INFO, variables: {taskName}}];
