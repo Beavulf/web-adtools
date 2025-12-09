@@ -61,7 +61,7 @@ export function useCronTask(options={}) {
         onError: handleError,
         onCompleted: async () => {
             // Добавляем задержку 700 мс перед ручным обновлением данных расписания в Apollo
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 2000));
             await client.refetchQueries({
                 include: [
                     { query: GET_SCHEDULES, variables: {filter:{}}},

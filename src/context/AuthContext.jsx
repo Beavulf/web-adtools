@@ -83,13 +83,16 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
     
     // Проверяем токен каждые 5 минут (300000 мс)
+    // Проверяем токен только если мы НЕ на странице логина
     const interval = setInterval(() => {
-      if (!checkAuth()) {
-        window.location.href = '/login';
-        alert('Токен истек, авторизируйтесь заново.')        
-        console.warn("Token expired, user will be logged out");
+      if (window.location.pathname !== '/login') { // если не на /login
+        if (!checkAuth()) {
+          window.location.href = '/login';
+          alert('Токен истек, авторизируйтесь заново.');
+          console.warn("Token expired, user will be logged out");
+        }
       }
-    }, 3 * 60 * 1000); // 5 минут
+    }, 5 * 60 * 1000); // 5 минут (300000 мс)
     
     // Очищаем интервал при размонтировании
     return () => clearInterval(interval);

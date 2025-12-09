@@ -11,7 +11,7 @@ import { ApolloProvider } from '@apollo/client/react'
 import { AuthProvider } from './context/AuthContext.jsx'
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+  // <StrictMode>
     <ApolloProvider client={client}>
       <BrowserRouter>
         <AuthProvider>
@@ -21,5 +21,5 @@ createRoot(document.getElementById('root')).render(
         </AuthProvider>
       </BrowserRouter>
     </ApolloProvider>
-  </StrictMode>,
+  // </StrictMode>,
 )

@@ -113,7 +113,7 @@ const TableData = React.memo(({ onHidden, searchValue }) => {
         </Popover>
 
         <Search
-          placeholder="Поиск по ФИО, логину, датам (гггг-мм-дд), приказу, описанию..."
+          placeholder="Поиск (Enter) по ФИО, логину, датам (гггг-мм-дд), приказу, описанию..."
           onSearch={handleSearch}
           allowClear
         />

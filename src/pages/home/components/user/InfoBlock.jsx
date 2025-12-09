@@ -12,20 +12,21 @@
  * @param {string} props.iconSrc - ссылка на иконку слева
  * @param {string} [props.helpText="-"] - текст подсказки, показываемый при наведении "?"
  */
-import React from 'react'
+import React from 'react';
 import { 
     Flex,
     Tag,
     Typography,
     Popover,
     Button
-} from "antd"
-import "./UserInfo.css"
+} from "antd";
+import "./UserInfo.css";
 
-const {Text, Paragraph} = Typography
+const {Text, Paragraph} = Typography;
 
-const InfoBlock = React.memo(({selectedUser, text, title, iconSrc, helpText="-"}) => {
-    const content = <Paragraph copyable={!!selectedUser} style={{maxWidth:'400px'}}>{text}</Paragraph>
+const InfoBlock = React.memo(({selectedUser, text="-", title, iconSrc, helpText="-"}) => {
+    const formatedText = Array.isArray(text) ? text.map(line=>line.split(',')[0]).join(';') : text
+    const content = <Paragraph copyable={!!selectedUser} style={{maxWidth:'600px'}}>{formatedText}</Paragraph>
     return (
         <div className='block-info'>
             <img src={iconSrc} alt="ICO" style={{width:'56px', objectFit:'contain'}}/>
@@ -35,7 +36,7 @@ const InfoBlock = React.memo(({selectedUser, text, title, iconSrc, helpText="-"}
                     trigger={'click'} 
                     content={content}
                 >
-                    <Text className='block-info-text-more'>
+                    <Text style={{fontSize:'14px'}} className='block-info-text-more'>
                         <span className={selectedUser ? "text-fade-in" : ''}>{text}</span> 
                     </Text>
                 </Popover>
@@ -47,4 +48,4 @@ const InfoBlock = React.memo(({selectedUser, text, title, iconSrc, helpText="-"}
     )
 });
 
-export default InfoBlock
+export default InfoBlock;

@@ -1,0 +1,8 @@
+DEPLOYMENT.md — подробная инструкция по деплою с тремя вариантами:
+    IIS (Internet Information Services) — рекомендуется для Windows
+    Nginx for Windows — легковесный вариант
+    Node.js serve — для быстрого тестирования
+QUICK_DEPLOY.md — краткая инструкция для быстрого старта
+web.config — конфигурация для IIS (поддержка SPA, редиректы для React Router)
+nginx.conf.example — пример конфигурации для Nginx
+deploy.ps1 — PowerShell-скрипт для автоматического деплоя

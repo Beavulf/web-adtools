@@ -22,6 +22,7 @@ import {
 } from "antd"
 import InfoBlock from "./InfoBlock"
 import UserInfoAction from "./UserInfoAction"
+import isActiveFormat from "../../../../utils/isActiveFormat"
 import './UserInfo.css'
 
 const {Title, Text} = Typography
@@ -53,7 +54,7 @@ const transformUserData = (selectedUser) => {
         memberOf: selectedUser.memberOf,
         title: selectedUser.title,
         login: selectedUser.sAMAccountName,
-        isActive: String(selectedUser.userAccountControl) === '512' ? 'ВКЛЮЧЕНА' : 'ВЫКЛЮЧЕНА'
+        isActive: isActiveFormat(selectedUser)
     }
 }
 
@@ -83,7 +84,7 @@ const UserInfo = React.memo(({selectedUser, hidden, onTableSearch}) => {
                                 className={selectedUser ? "text-fade-in" : ''} 
                                 copyable
                                 ellipsis
-                                style={{fontSize:'12px', maxWidth:'500px', color:'gray'}}
+                                style={{fontSize:'12px', maxWidth:'650px', color:'gray'}}
                             >
                                 {userData.distinguishedName}
                             </Text>
@@ -138,7 +139,7 @@ const UserInfo = React.memo(({selectedUser, hidden, onTableSearch}) => {
                     />
                     <InfoBlock 
                         selectedUser={selectedUser} 
-                        text={userData.memberOf} 
+                        text={userData?.memberOf} 
                         title="Группы" 
                         iconSrc="/Member.png"
                         helpText="Параметр в АД - memberOf"

@@ -1,3 +1,13 @@
+/**
+ * @file Home.jsx
+ * @description
+ * Главная страница приложения WEB AD Tools.
+ * Здесь происходит отображение основной структуры: сайдбар, шапка, таблица пользователей, инфо о пользователе, футер.
+ * Подключаются основные контекстные провайдеры (авторизация, нотификации, сообщения), а также все необходимые компоненты Ant Design.
+ * Данные пользователей получаются через LDAP (кастомный хук useLdap).
+ * UI разбивается на отдельные компоненты по разделам для упрощения поддержки кода.
+ */
+
 import React, { useEffect, useCallback } from "react";
 import { useState } from "react";
 import { 
@@ -12,11 +22,11 @@ import { useAuth } from "../../context/AuthContext";
 import UserInfo from "./components/user/UserInfo";
 import FooterInfo from "./components/layout/FooterInfo";
 import TableData from "./components/schedule/TableData";
-import {CustomMessageProvider} from "../../context/MessageContext";
+import { CustomMessageProvider } from "../../context/MessageContext";
 import { useLdap } from "../../hooks/api/useLdap";
-import MainHeader from "./components/layout/MainHeader.jsx"
+import MainHeader from "./components/layout/MainHeader.jsx";
 import MainSider from "./components/layout/MainSider.jsx";
-import "./Home.css"
+import "./Home.css";
 
 const { Header, Sider, Content, Footer } = Layout;
 const { Text } = Typography

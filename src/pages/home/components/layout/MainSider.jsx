@@ -24,6 +24,7 @@ import { SearchOutlined } from "@ant-design/icons";
 import styled from "styled-components";
 import UserListItem from "../user/UserListItem";
 import { useLdap } from "../../../../hooks/api/useLdap";
+import isActiveFormat from "../../../../utils/isActiveFormat";
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -127,7 +128,7 @@ function MainSider({
                     fio={userInfo.cn}
                     department={userInfo.department}
                     description={userInfo.description}
-                    ribbonText={userInfo.userAccountControl === '512' ? 'ВКЛЮЧЕНА' : 'ВЫКЛЮЧЕНА'}
+                    ribbonText={isActiveFormat(userInfo)}
                 />
             </UserCardWrapper>
         ));
@@ -153,6 +154,7 @@ function MainSider({
                     allowClear
                     size="large"
                     loading={loading.search}
+                    disabled={loading.search}
                     onSearch={handleSearch}
                 />
             </SearchHeader>

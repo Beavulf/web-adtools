@@ -95,7 +95,7 @@ const LoginPage = () => {
     let message = 'Произошла неизвестная ошибка';
     
     if (error.message === 'Failed to fetch') {
-      message = 'Ошибка соединения с сервером. Проверьте подключение к интернету.';
+      message = 'Ошибка соединения с сервером. Проверьте подключение к серверу.';
     } else if (error.message === 'Unauthorized') {
       message = 'Неверный логин или пароль.';
     } else if (error.graphQLErrors?.length > 0) {

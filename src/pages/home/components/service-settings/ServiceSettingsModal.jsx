@@ -9,7 +9,7 @@
  * @param {Function} onCancel - Колбэк на закрытие модального окна.
  */
 
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import {
     Modal,
     Typography,
@@ -39,56 +39,56 @@ const StyledCheckIcon = styled(CheckCircleOutlined)`
     }
 `;
 
-const {Text} = Typography;
+const { Text } = Typography;
 const taskName = import.meta.env.VITE_APP_TASK_NAME;
 
-const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
+const ServiceSettingsModal = React.memo(({ isOpen, onCancel }) => {
     const [messageApi, contextHolder] = message.useMessage();
-    const {taskInfo, loading, actions, error: errorTaskInfo} = useCronTask({
-        enabled: isOpen, onError: (err)=> messageApi.error(`Ошибка при работе со службой: ${err.message}`)
-    }) 
+    const { taskInfo, loading, actions, error: errorTaskInfo } = useCronTask({
+        enabled: isOpen, onError: (err) => messageApi.error(`Ошибка при работе со службой: ${err.message}`)
+    });
     const time = timeLeft(taskInfo?.getTimeout);
 
     const handleStopTask = async () => {
         try {
-            await actions.stopTask()
-            messageApi.success('Служба остановлена')
+            await actions.stopTask();
+            messageApi.success('Служба остановлена');
         }
-        catch(err) {
-            messageApi.error(err.message)
+        catch (err) {
+            messageApi.error(err.message);
         }
     }
 
     const handleStartTask = async () => {
         try {
-            await actions.startTask()
-            messageApi.success('Служба запущена')
+            await actions.startTask();
+            messageApi.success('Служба запущена');
         }
-        catch(err) {
-            messageApi.error(err.message)
+        catch (err) {
+            messageApi.error(err.message);
         }
     }
 
     const handleUpdateTask = async () => {
         try {
             if (!source || source.length < 7) {
-                messageApi.error('Введите корректное время расписания службы')
-                return
+                messageApi.error('Введите корректное время расписания службы');
+                return;
             }
-            await actions.updateTask(source)
-            messageApi.success('Время расписания службы обновлено')
+            await actions.updateTask(source);
+            messageApi.success('Время расписания службы обновлено');
         }
-        catch(err) {
-            messageApi.error(err.message)
+        catch (err) {
+            messageApi.error(err.message);
         }
     }
 
     const handleFireOnTick = async () => {
         try {
-            await actions.fireOnTick()
-            messageApi.success('Служба выполнена прямо сейчас')
+            await actions.fireOnTick();
+            messageApi.success('Служба выполнена прямо сейчас');
         }
-        catch(err) {
+        catch (err) {
             messageApi.error(err.message)
         }
     }
@@ -109,7 +109,7 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
             </Tag>
         )
     }
-    
+
     return (
         <Modal
             title={<Text>Настройки службы расписания</Text>}
@@ -120,23 +120,23 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
             destroyOnHidden
         >
             {contextHolder}
-            <Card title={<Text>Служба <span style={{color:'purple'}}>{taskName}</span></Text>} extra={<ServiceStatusTag/>}>
+            <Card title={<Text>Служба <span style={{ color: 'purple' }}>{taskName}</span></Text>} extra={<ServiceStatusTag />}>
                 {loading.info && <Text>Загрузка...</Text>}
                 {errorTaskInfo && <Text type="danger">Ошибка: {errorTaskInfo?.message}</Text>}
                 {taskInfo && (
                     <Flex vertical gap={10}>
                         <Flex align="center">
                             <Text>Установленное время сработки службы:</Text>
-                            <Input 
-                                value={source} 
-                                onChange={(e)=>setSource(e.target.value)} 
+                            <Input
+                                value={source}
+                                onChange={(e) => setSource(e.target.value)}
                                 suffix={
                                     <Popconfirm
                                         title="Сохранение"
                                         description={
                                             <Flex vertical>
                                                 <Text>Сохранить внесенные изменения в расписание службы?</Text>
-                                                <span style={{color:'gray'}}>*сохраненное расписание действует до перезапуска сервера</span>
+                                                <span style={{ color: 'gray' }}>*сохраненное расписание действует до перезапуска сервера</span>
                                             </Flex>
                                         }
                                         okText="Да"
@@ -144,17 +144,17 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
                                         onConfirm={handleUpdateTask}
                                         loading={loading.update}
                                     >
-                                        <StyledCheckIcon 
-                                            title="Сохранить измнения" 
-                                            disabled={loading.update} 
+                                        <StyledCheckIcon
+                                            title="Сохранить измнения"
+                                            disabled={loading.update}
                                         />
                                     </Popconfirm>
                                 }
-                                addonAfter={<ReloadOutlined title="Сбросить" size='small' onClick={()=>setSource(taskInfo?.source)}/>}
+                                addonAfter={<ReloadOutlined title="Сбросить" size='small' onClick={() => setSource(taskInfo?.source)} />}
                             >
                             </Input>
                         </Flex>
-                        <Flex gap={5} vertical style={{backgroundColor:'rgba(187, 187, 187, 0.1)', borderRadius:'8px', padding:'5px', color:'gray'}}>
+                        <Flex gap={5} vertical style={{ backgroundColor: 'rgba(187, 187, 187, 0.1)', borderRadius: '8px', padding: '5px', color: 'gray' }}>
                             <Flex align="center" justify="center" gap={10} >
                                 <Flex>
                                     Подсказка по заполнению:<br></br>
@@ -167,60 +167,60 @@ const ServiceSettingsModal = React.memo(({isOpen, onCancel})=>{
                                     5-й (): день недели (любые дни недели)<br></br>
                                 </Flex>
                             </Flex>
-                            <Flex style={{marginLeft:'13px'}}>
+                            <Flex style={{ marginLeft: '13px' }}>
                                 *по умолчанию стоит - каждые 10 часов в промежутке с 0 до 23 часов*<br></br>
                             </Flex>
                         </Flex>
-                        <Flex justify="space-between" style={{margin:'0'}}>
+                        <Flex justify="space-between" style={{ margin: '0' }}>
                             <Text>Дата след. сработки: {taskInfo?.sendAt}</Text>
                             <Text>Время до след сработки: {time}</Text>
                         </Flex>
-                        <Flex justify="space-between" style={{margin:'0'}}>
+                        <Flex justify="space-between" style={{ margin: '0' }}>
                             <Text>Следующий запуск: {dayjs(taskInfo?.nextDate).format('DD.MM.YYYY HH:mm:ss')}</Text>
-                            <Text>Последний запуск: {taskInfo?.lastDate ?? '-'}</Text>
+                            <Text>Последний запуск: {taskInfo?.lastDate ? dayjs(taskInfo?.lastDate).format('DD.MM.YYYY HH:mm:ss') : 'нет'}</Text>
                         </Flex>
-                        <Flex gap={10} style={{marginTop:'10px'}}>
-                            <Button 
-                                block 
-                                color='green' 
-                                variant="filled" 
+                        <Flex gap={10} style={{ marginTop: '10px' }}>
+                            <Button
+                                block
+                                color='green'
+                                variant="filled"
                                 disabled={taskInfo?.isActive}
                                 onClick={async () => await handleStartTask()}
                                 loading={loading.start}
                                 title="Запустить службу на сервере"
-                                >Запустить
+                            >Запустить
                             </Button>
                             <Popconfirm
                                 title="Выполнение"
                                 description="Выполнить службу прямо сейчас?"
                                 okText="Да"
                                 cancelText="Нет"
-                                onConfirm={async () => await handleFireOnTick()}
+                                onConfirm={handleFireOnTick}
                                 loading={loading.fireOnTick}
                             >
-                                <Button 
-                                    block 
-                                    color="orange" 
-                                    variant="filled" 
+                                <Button
+                                    block
+                                    color="orange"
+                                    variant="filled"
                                     title="Прямо сейчас выполнить задачи"
                                     loading={loading.fireOnTick}
                                     disabled={!taskInfo?.isActive || loading.fireOnTick}
-                                    >Горячий запуск
+                                >Горячий запуск
                                 </Button>
                             </Popconfirm>
-                            <Button 
-                                block 
-                                color="danger" 
+                            <Button
+                                block
+                                color="danger"
                                 variant="filled"
-                                onClick={async ()=> await handleStopTask()}
+                                onClick={async () => await handleStopTask()}
                                 loading={loading.stop}
                                 disabled={!taskInfo?.isActive}
                                 title="Остановить службу на сервере"
-                                >Остановить
+                            >Остановить
                             </Button>
                         </Flex>
                     </Flex>
-                )}                
+                )}
             </Card>
         </Modal>
     )
