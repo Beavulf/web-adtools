@@ -59,21 +59,21 @@ export function useCronTask(options={}) {
         refetchQueries: refetchTaskInfo,
         awaitRefetchQueries: true,
         onError: handleError,
-        onCompleted: async () => {
-            // Добавляем задержку 700 мс перед ручным обновлением данных расписания в Apollo
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            await client.refetchQueries({
-                include: [
-                    { query: GET_SCHEDULES, variables: {filter:{}}},
-                    { query: GET_RECALLS, variables: {filter:{}}},
-                    { query: GET_ONETIME_TASKS, variables: {filter:{}}},
-                ],
-                onQueryUpdated: (observableQuery) => {
-                    // Принудительно обновляем запрос после задержки
-                    return observableQuery.refetch();
-                }
-            });
-        }
+        // onCompleted: async () => {
+        //     // Добавляем задержку 700 мс перед ручным обновлением данных расписания в Apollo
+        //     await new Promise(resolve => setTimeout(resolve, 2000));
+        //     await client.refetchQueries({
+        //         include: [
+        //             { query: GET_SCHEDULES, variables: {filter:{}}},
+        //             { query: GET_RECALLS, variables: {filter:{}}},
+        //             { query: GET_ONETIME_TASKS, variables: {filter:{}}},
+        //         ],
+        //         onQueryUpdated: (observableQuery) => {
+        //             // Принудительно обновляем запрос после задержки
+        //             return observableQuery.refetch();
+        //         }
+        //     });
+        // }
     });
 
     const startTask = useCallback(

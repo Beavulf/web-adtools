@@ -25,7 +25,7 @@ import "./UserInfo.css";
 const {Text, Paragraph} = Typography;
 
 const InfoBlock = React.memo(({selectedUser, text="-", title, iconSrc, helpText="-"}) => {
-    const formatedText = Array.isArray(text) ? text.map(line=>line.split(',')[0]).join(';') : text
+    const formatedText = Array.isArray(text) ? text.map(line=>line.split(',')[0].trim()).join('; ') : text;
     const content = <Paragraph copyable={!!selectedUser} style={{maxWidth:'600px'}}>{formatedText}</Paragraph>
     return (
         <div className='block-info'>

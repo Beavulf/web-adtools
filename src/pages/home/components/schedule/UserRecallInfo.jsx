@@ -21,7 +21,8 @@ import {
     Card,
     Space,
     Tag,
-    Divider
+    Divider,
+    Tooltip
 } from 'antd';
 import dayjs from "dayjs";
 import { DeleteOutlined, FileZipOutlined } from "@ant-design/icons";
@@ -99,94 +100,81 @@ const UserRecallInfo = React.memo(({record, isArchive = false}) => {
         <Flex vertical gap={12}>
         {recalls.map((recall) => (
             <Card
-                key={recall.id}
-                size="small"
-                style={{
-                    borderRadius: 10,
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-                    background: "#fafafa",
-                }}
-                styles={{body:{ padding: "10px 16px" }}}
-            >
-            <Flex justify="space-between" align="start">
-            {/* Левая часть с основной информацией */}
-                <Flex vertical gap={4}>
-                    <Text strong>Отзыв — приказ <Text style={{ color: "purple" }}>{recall.order}</Text></Text>
-
-                    <Space size={6} wrap>
-                        <Text>с</Text>
-                        <Text style={{ fontStyle: "italic", color: "teal" }}>
-                            {dayjs(recall.startDate).format("DD.MM.YYYY")}
-                        </Text>
-                        <Text>по</Text>
-                        <Text style={{ fontStyle: "italic", color: "teal" }}>
-                            {dayjs(recall.endDate).format("DD.MM.YYYY")}
-                        </Text>
-                    </Space>
-
-                    <Space size={6}>
-                        <Text>статус:</Text>
-                        <Tag color={recall.status ? "green" : "orange"}>
-                            {recall.status ? "выполняется" : "ожидание"}
-                        </Tag>
-                    </Space>
-
-                    {recall.description && (
-                        <Text type="secondary" style={{ fontSize: 13 }}>
-                            {recall.description}
-                        </Text>
-                    )}
-                </Flex>
-
-                {/* Правая часть с действиями */}
-                {!isArchive && (
-                <Flex vertical gap={4}>
+            key={recall.id}
+            size="small"
+            title={
+                <Text strong>
+                    Отзыв — приказ <Tag color="purple">{recall.order}</Tag>
+                </Text>
+            }
+            extra={!isArchive && (
+                <Space>
                     <Popconfirm
                         title="Архивирование"
-                        description="Архивировать отзыв и удалить?"
+                        description="Архивировать этот отзыв?"
                         okText="Да"
                         cancelText="Нет"
-                        onConfirm={()=>handleArchiveRecall(recall)}
+                        onConfirm={() => handleArchiveRecall(recall)}
                     >
-                    <Button
-                        size="middle"
-                        icon={<FileZipOutlined />}
-                        loading={loading.archive}
-                        type="default"
-                        title="Архивировать отзыв и удалить из расписания"
-                    />
+                        <Tooltip title="Архивировать отзыв">
+                            <Button
+                                size="small"
+                                icon={<FileZipOutlined />}
+                                loading={loading.archive}
+                            />
+                        </Tooltip>
                     </Popconfirm>
-
                     <Popconfirm
                         title="Удаление отзыва"
-                        description="Удалить отзыв без архивации?"
+                        description="Удалить отзыв безвозвратно?"
                         okText="Да"
                         cancelText="Нет"
-                        onConfirm={()=>handleDeleteRecall(recall)}
+                        onConfirm={() => handleDeleteRecall(recall)}
                     >
-                    <Button
-                        size="middle"
-                        danger
-                        icon={<DeleteOutlined />}
-                        loading={loading.delete}
-                        title="Удалить запись отзыва"
-                    />
+                        <Tooltip title="Удалить отзыв">
+                            <Button
+                                size="small"
+                                danger
+                                icon={<DeleteOutlined />}
+                                loading={loading.delete}
+                            />
+                        </Tooltip>
                     </Popconfirm>
-                </Flex>
+                </Space>
+            )}
+            style={{ background: "#fafafa" }}
+        >
+            <Flex vertical gap={8}>
+                <Space wrap>
+                    <Tag color={recall.status ? "green" : "orange"}>
+                        {recall.status ? "выполняется" : "ожидание"}
+                    </Tag>
+                    <Text style={{ fontStyle: "italic", color: "teal" }}>
+                        {dayjs(recall.startDate).format("DD.MM.YYYY")}
+                    </Text>
+                    <Text>по</Text>
+                    <Text style={{ fontStyle: "italic", color: "teal" }}>
+                        {dayjs(recall.endDate).format("DD.MM.YYYY")}
+                    </Text>
+                </Space>
+
+                {recall.description && (
+                    <Text type="secondary" style={{ fontSize: 13, paddingLeft: 4 }}>
+                        {recall.description}
+                    </Text>
                 )}
+
+                <Divider style={{ margin: "4px 0" }} />
+
+                <Flex justify="space-between" align="center">
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                        Создал: {recall.createdBy}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                        {dayjs(recall.createdAt).format("DD.MM.YYYY HH:mm")}
+                    </Text>
+                </Flex>
             </Flex>
-
-          <Divider style={{ margin: "8px 0" }} />
-
-          {/* Нижняя строка с метаданными */}
-          <Flex justify="space-between" align="center">
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              создан: {dayjs(recall.createdAt).format("DD.MM.YYYY HH:mm:ss")}
-            </Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {recall.createdBy}
-            </Text>
-          </Flex>
         </Card>
       ))}
     </Flex>

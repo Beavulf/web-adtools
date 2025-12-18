@@ -17,7 +17,14 @@
 import React from "react";
 import { Tag, Flex } from "antd";
 import RecordAction from "./RecordAction";
-
+const typeFilters = [
+    { text: 'Отпуск', value: 'OTPYSK' },
+    { text: 'Стажировка', value: 'STAJIROVKA' },
+    { text: 'Продление', value: 'PRODLENIE_OTPYSKA' },
+    { text: 'Командировка', value: 'KOMANDIROVKA' },
+    { text: 'Учеба', value: 'UCHEBA' },
+    { text: 'Декрет', value: 'DEKRET' },
+];
 // Словари для отображения типа отпуска и цвета
 export const SCHEDULE_TYPE_LABELS = {
     OTPYSK: 'Отпуск',
@@ -59,14 +66,7 @@ const scheduleColumns = (isArchive = false) => {
             title: 'Тип',
             dataIndex: 'type',
             key: 'type',
-            filters: [
-                { text: 'Отпуск', value: 'OTPYSK' },
-                { text: 'Стажировка', value: 'STAJIROVKA' },
-                { text: 'Продление', value: 'PRODLENIE_OTPYSKA' },
-                { text: 'Командировка', value: 'KOMANDIROVKA' },
-                { text: 'Учеба', value: 'UCHEBA' },
-                { text: 'Декрет', value: 'DEKRET' },
-            ],
+            filters: typeFilters,
             onFilter: (value, record) => record.type === value,
             filterSearch: true,
             render: (text, record) => {
@@ -95,8 +95,8 @@ const scheduleColumns = (isArchive = false) => {
                 const endDate = new Date(record.endDate).toLocaleDateString();
                 return (
                     <Flex vertical key={`dates-${record.id}`}>
-                        <span>{startDate}</span>
-                        <span style={{ color: 'gray' }}>по-{endDate}</span>
+                        <span>{startDate} </span> 
+                        <span><span style={{ color: 'gray' }}>по -</span> {endDate}</span>
                     </Flex>
                 );
             },
@@ -177,17 +177,19 @@ const scheduleColumns = (isArchive = false) => {
             ],
             onFilter: (value, record) => record.isRecall === value,
             render: (text) => (
-                <Tag color={text ? 'orange' : 'blue'}>
+                <Tag style={{}} color={text ? 'orange' : 'blue'}>
                     {text ? 'отозван' : 'нет'}
                 </Tag>
             ),
             width: 78,
+            align: 'center',
         },
         {
             title: 'Действия',
             key: 'actions',
             render: (_, record) => isArchive ? null : <RecordAction record={record} />,
             width: 120,
+            align: 'center'
         },
     ];
 }

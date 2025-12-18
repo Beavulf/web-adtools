@@ -25,7 +25,7 @@ const {Title, Text} = Typography;
 const UserListItem = React.memo(({fio, department, description, ribbonText, isActive}) => {
   return (
     <Card
-      title={<Title level={4} ellipsis style={{margin:0}}>{fio}</Title>}
+      title={<Title level={4} style={{margin:0, whiteSpace:'normal', wordBreak:'break-word'}}>{fio}</Title>}
       className={`user-card-element ${isActive ? "selected" : ""}`}
       extra={
         <Tag bordered={false} color={ribbonText === 'ВКЛЮЧЕНА' ? 'green' : 'red'}>
@@ -34,7 +34,7 @@ const UserListItem = React.memo(({fio, department, description, ribbonText, isAc
       }
       styles={{ body: { padding:'10px 24px', overflow:'hidden', } }}
     >
-      <Flex gap={10}>
+      <Flex vertical gap={10}>
         <Tag bordered={false} icon={<AuditOutlined />} color="purple">
           Отдел: {department}
         </Tag>
@@ -42,7 +42,7 @@ const UserListItem = React.memo(({fio, department, description, ribbonText, isAc
           <Tag bordered={false} icon={<ReadOutlined />} color="magenta">
             Описание
           </Tag>
-          <Text ellipsis style={{fontSize:'12px', maxWidth:'200px',color:'gray'}}>
+          <Text ellipsis style={{fontSize:'12px',color:'gray'}}>
             - {description ?? 'нет'}
           </Text>
         </Flex>

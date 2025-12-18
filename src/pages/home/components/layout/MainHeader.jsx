@@ -13,6 +13,8 @@ import { Menu, Popover, Flex } from "antd";
 import GradientText from "../splash-text/GradientText";
 import { SettingOutlined, LogoutOutlined } from "@ant-design/icons";
 import ServiceSettingsModal from "../service-settings/ServiceSettingsModal";
+import SessionTimer from "./SessionTimer";
+import { useLocation, useNavigate } from "react-router-dom";
 
 // пункты меню
 const items = [
@@ -34,6 +36,23 @@ function ServiceSettingsTrigger() {
 }
 
 function MainHeader({ handleLogout }) {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const handleMenuClick = (e) => {
+        if (e.key === '1') {
+            navigate('/main');
+        } else if (e.key === '2') {
+            navigate('/archive');
+        }
+    };
+
+    const getSelectedKey = () => {
+        if (location.pathname.startsWith('/archive')) {
+            return ['2'];
+        }
+        return ['1'];
+    };
     return (
         // Flex-контейнер для главных блоков хедера
         <Flex align="center" justify="space-between" style={{ width: "100%" }}>
@@ -68,7 +87,8 @@ function MainHeader({ handleLogout }) {
                 mode="horizontal"
                 items={items}
                 theme="dark"
-                defaultSelectedKeys={["1"]}
+                selectedKeys={getSelectedKey()}
+                onClick={handleMenuClick}
                 style={{
                     flex: 1,
                     minWidth: 0,
@@ -81,7 +101,8 @@ function MainHeader({ handleLogout }) {
             />
 
             {/* Блок кнопок справа: настройки сервиса и выход */}
-            <div style={{ display: "flex", gap: "10px" }}>
+            <div style={{ display: "flex", gap: "10px", alignItems: 'center' }}>
+                <SessionTimer onSessionEnd={handleLogout} />
                 <ServiceSettingsTrigger />
                 <Popover content={<b>Выйти из программы</b>}>
                     <LogoutOutlined

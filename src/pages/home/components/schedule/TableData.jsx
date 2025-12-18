@@ -28,7 +28,8 @@ import {
   Input, 
   Table, 
   Button, 
-  Popover
+  Popover,
+  Checkbox
 } from "antd";
 import {
   SyncOutlined,
@@ -40,6 +41,18 @@ import UserRecallInfo from "./UserRecallInfo";
 import filterSchedules from "../../../../utils/filterSchedules";
 import { useSchedule } from "../../../../hooks/api/useSchedule";
 import { useCustomMessage } from "../../../../context/MessageContext";
+import styled from "styled-components";
+
+// StyledTable применяет стиль для чётных и нечётных строк тела таблицы
+const StyledTable = styled(Table)`
+  .ant-table-tbody > tr:nth-child(odd) {
+    background: ${({ isColored }) => isColored ? "#fff" : "inherit"};
+  }
+  .ant-table-tbody > tr:nth-child(even) {
+    background: ${({ isColored }) => isColored ? "rgba(127, 162, 219, 0.09)" : "inherit"};
+  }
+`;
+
 
 const { Search } = Input;
 
@@ -49,6 +62,7 @@ const TableData = React.memo(({ onHidden, searchValue }) => {
   const [hiddenUserInfo, setHiddenUserInfo] = useState(false);
   const [filteredSchedules, setFilteredSchedules] = useState([]);
   const [pending, startTransition] = useTransition();
+  const [isColored, setIsColored] = useState(false);
 
   const handleViewError = useCallback((error) => {
     msgError(`Ошибка получения данных Задач: ${error.message}`);
@@ -113,10 +127,20 @@ const TableData = React.memo(({ onHidden, searchValue }) => {
         </Popover>
 
         <Search
-          placeholder="Поиск (Enter) по ФИО, логину, датам (гггг-мм-дд), приказу, описанию..."
+          placeholder="Поиск (Enter, Esc сбросить) по ФИО, логину, датам (дд.мм.гггг, либо диапазон дд.мм.гггг-дд.мм.гггг), приказу, описанию..."
           onSearch={handleSearch}
           allowClear
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') handleSearch('');
+          }}
+          disabled={pending}
+          style={{flex:1}}
         />
+        <Popover content={<span>Тестовая функция раскраски строк в таблице.</span>}>
+          <Button style={{padding:'10px'}}>
+            <Checkbox checked={isColored} onChange={(e) => setIsColored(e.target.checked)}/>
+          </Button>
+        </Popover>
         <Popover
           content={
             <span>Обновить таблицу (авт. обновление каждые 120 сек.)</span>
@@ -137,7 +161,8 @@ const TableData = React.memo(({ onHidden, searchValue }) => {
       </Flex>
       <div style={{ overflow: "auto" }}>
         <Suspense>
-          <Table
+          <StyledTable
+            isColored={isColored}
             pagination={false}
             dataSource={filteredSchedules}
             columns={columns}

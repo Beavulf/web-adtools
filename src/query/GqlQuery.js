@@ -1,8 +1,8 @@
 import { gql } from '@apollo/client'
 
 const GET_SCHEDULES = gql`
-query GetSchedules($filter: ScheduleFilterInput!) {
-    getSchedules(filter: $filter) {
+query GetSchedules($filter: ScheduleFilterInput!, $take: Float, $skip: Float) {
+    getSchedules(filter: $filter, take: $take, skip: $skip) {
         id
         fio
         login
@@ -22,8 +22,8 @@ query GetSchedules($filter: ScheduleFilterInput!) {
 `;
 
 const GET_SCHEDULES_FILTER = gql`
-    query GetSchedules($filter: ScheduleFilterInput!) {
-    getSchedules(filter: $filter) {
+    query GetSchedules($filter: ScheduleFilterInput!, $take: Float, $skip: Float) {
+    getSchedules(filter: $filter, take: $take, skip: $skip) {
         id
         fio
         login
@@ -63,8 +63,8 @@ const ARCHIVE_SCHEDULE = gql`
 
 
 const GET_ARCHIVE_SCHEDULES = gql`
-    query GetArchiveSchedules($filter: ScheduleFilterInput!) {
-        getArchiveSchedules(filter: $filter) 
+    query GetArchiveSchedules($filter: ScheduleFilterInput!, $take: Float, $skip: Float) {
+        getArchiveSchedules(filter: $filter, take: $take, skip: $skip) 
     {
         id
         fio

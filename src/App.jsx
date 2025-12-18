@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from './pages/login/Login'
 import HomePage from './pages/home/Home'
+import ArchivePage from "./pages/archive";
 import { useAuth } from "./context/AuthContext";
 
 import './App.css'
@@ -37,6 +38,11 @@ function App() {
           </PrivateRoute>
         } 
       />
+      <Route path='/archive' element={
+          <PrivateRoute>
+            <ArchivePage/>
+          </PrivateRoute>
+        } />
     </Routes>
   )
 }

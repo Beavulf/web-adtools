@@ -23,6 +23,8 @@ import {
 } from 'antd'
 import { CheckCircleOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useCronTask } from "../../../../hooks/api/useCronTask";
+import { useSchedule } from "../../../../hooks/api/useSchedule"
+import { useRecall } from "../../../../hooks/api/useRecall";
 import timeLeft from "../../../../utils/formatTimeLeft";
 import styled from "styled-components";
 import dayjs from "dayjs";
@@ -44,6 +46,12 @@ const taskName = import.meta.env.VITE_APP_TASK_NAME;
 
 const ServiceSettingsModal = React.memo(({ isOpen, onCancel }) => {
     const [messageApi, contextHolder] = message.useMessage();
+    const { actions: actionsSchedule } = useSchedule({
+        onError: (err) => messageApi.error(`Ошибка при работе с расписанием: ${err.message}`)
+    });
+    const { actions: actionsRecall } = useRecall({
+        onError: (err) => messageApi.error(`Ошибка при работе с отзывом: ${err.message}`)
+    });
     const { taskInfo, loading, actions, error: errorTaskInfo } = useCronTask({
         enabled: isOpen, onError: (err) => messageApi.error(`Ошибка при работе со службой: ${err.message}`)
     });
@@ -57,7 +65,7 @@ const ServiceSettingsModal = React.memo(({ isOpen, onCancel }) => {
         catch (err) {
             messageApi.error(err.message);
         }
-    }
+    };
 
     const handleStartTask = async () => {
         try {
@@ -67,7 +75,7 @@ const ServiceSettingsModal = React.memo(({ isOpen, onCancel }) => {
         catch (err) {
             messageApi.error(err.message);
         }
-    }
+    };
 
     const handleUpdateTask = async () => {
         try {
@@ -81,17 +89,19 @@ const ServiceSettingsModal = React.memo(({ isOpen, onCancel }) => {
         catch (err) {
             messageApi.error(err.message);
         }
-    }
+    };
 
     const handleFireOnTick = async () => {
         try {
             await actions.fireOnTick();
-            messageApi.success('Служба выполнена прямо сейчас');
+            await actionsSchedule.fetchSchedules({ variables: { filter: {} } });
+            await actionsRecall.fetchRecalls({ variables: { filter: {} } });
+            messageApi.success('Служба выполнена прямо сейчас.');
         }
         catch (err) {
-            messageApi.error(err.message)
+            messageApi.error(err.message);
         }
-    }
+    };
 
     // отображение исходного времени расписания службы
     const [source, setSource] = useState('')
@@ -108,7 +118,7 @@ const ServiceSettingsModal = React.memo(({ isOpen, onCancel }) => {
                 <Text>{taskInfo?.isActive ? 'Включена' : 'Выключена'}</Text>
             </Tag>
         )
-    }
+    };
 
     return (
         <Modal
@@ -144,10 +154,19 @@ const ServiceSettingsModal = React.memo(({ isOpen, onCancel }) => {
                                         onConfirm={handleUpdateTask}
                                         loading={loading.update}
                                     >
-                                        <StyledCheckIcon
+                                        <Button 
+                                            title="Сохранить измнения" 
+                                            size="small" 
+                                            type="primary" 
+                                            style={{ backgroundColor: 'rgba(57, 169, 63, 0.73)', borderColor: 'green', alignItems:'center' }}
+                                            loading={loading.update}
+                                            disabled={loading.update}
+                                            >сохранить
+                                        </Button>
+                                        {/* <StyledCheckIcon
                                             title="Сохранить измнения"
                                             disabled={loading.update}
-                                        />
+                                        /> */}
                                     </Popconfirm>
                                 }
                                 addonAfter={<ReloadOutlined title="Сбросить" size='small' onClick={() => setSource(taskInfo?.source)} />}
@@ -223,7 +242,7 @@ const ServiceSettingsModal = React.memo(({ isOpen, onCancel }) => {
                 )}
             </Card>
         </Modal>
-    )
-})
+    );
+});
 
 export default ServiceSettingsModal;
