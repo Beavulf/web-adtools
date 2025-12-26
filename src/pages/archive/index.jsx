@@ -21,8 +21,10 @@ import {
     Table,
     Checkbox,
     Tag,
-    Tooltip
+    Tooltip,
+    Drawer
 } from 'antd';
+import FilterComponent from './FilterComponent';
 import styled, { keyframes } from 'styled-components';
 import { useAuth } from "../../context/AuthContext";
 import FooterInfo from "../home/components/layout/FooterInfo";
@@ -34,11 +36,13 @@ import {
     FileDoneOutlined, 
     LineChartOutlined,
     SyncOutlined,
-    BgColorsOutlined
+    BgColorsOutlined,
+    FilterOutlined
 } from '@ant-design/icons';
 import LineChartExample from './LineChartExample';
 import scheduleArchiveColumns from './columns/ScheduleArchiveColumns';
 import recallColumns from './columns/RecallArchiveColumns';
+import oneTimesArchiveColumns from './columns/OneTimesArchiveColumns';
 import { useSchedule } from '../../hooks/api/useSchedule';
 import { useRecall } from '../../hooks/api/useRecall';
 import { useOneTime } from '../../hooks/api/useOneTime';
@@ -87,6 +91,7 @@ const ArchivePage = () => {
     const [current, setCurrent] = useState(1);
     const [pageSize, setPageSize] = useState(custimPageSizeOptions[0]);
     const [isTableColored, setIsTableColored] = useState(true);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     const { actions } = useLdap({
         onError: (error) => {
@@ -103,7 +108,7 @@ const ArchivePage = () => {
             openNotification(`Ошибка при работе с отзывами: ${error}`, 'error');
         }
     });
-    const {actions: actionsOneTime, loading: loadingOneTime, fetchOneTimesData} = useOneTime({
+    const {actions: actionsOneTime, loading: loadingOneTime, fetchArchiveOneTimesData} = useOneTime({
         onError: (error) => {
             openNotification(`Ошибка при работе с разовыми задачами: ${error}`, 'error');
         }
@@ -112,7 +117,7 @@ const ArchivePage = () => {
     useEffect(()=>{
         actionsSchedule.fetchArchiveSchedules({variables:{filter:{},take:50}});
         actionsRecall.fetchArchiveRecalls({variables:{filter:{},take:50}});
-        actionsOneTime.fetchOneTimes({variables:{filter:{},take:50}});
+        actionsOneTime.fetchArchiveOneTimes({variables:{filter:{},take:50}});
     }, [])
 
     const [api, contextHolder] = notification.useNotification();
@@ -154,7 +159,7 @@ const ArchivePage = () => {
             case '2':
                 return fetchArchiveRecallsData || [];
             case '3':
-                return fetchOneTimesData || [];
+                return fetchArchiveOneTimesData || [];
             default:
                 return [];
         }
@@ -167,10 +172,11 @@ const ArchivePage = () => {
             case '2':
                 return actionsRecall.fetchArchiveRecalls({variables:{filter:{},take:50}});
             case '3':
-                return actionsOneTime.fetchOneTimes({variables:{filter:{},take:50}});
+                return actionsOneTime.fetchArchiveOneTimes({variables:{filter:{},take:50}});
             default:
                 return [];
         }
+        
     }
 
     const getColumnsByKey = (key) => {
@@ -180,7 +186,7 @@ const ArchivePage = () => {
             case '2':
                 return recallColumns;
             case '3':
-                return scheduleArchiveColumns;
+                return oneTimesArchiveColumns;
             default:
                 return [];
         }
@@ -193,13 +199,38 @@ const ArchivePage = () => {
             case '2':
                 return loadingRecall.fetchArchiveRecalls;
             case '3':
-                return loadingOneTime.fetchOneTimes;
+                return loadingOneTime.fetchArchiveOneTimes;
             default:
                 return false;
         }
     }
+
+    const submitFilter = (values) => {
+        if (selectedKey==='1') {
+            
+            actionsSchedule.fetchArchiveSchedules({variables:{filter:values}});
+        } else if (selectedKey==='2') {
+            actionsRecall.fetchArchiveRecalls({variables:{filter:values}});
+        } else if (selectedKey==='3') {
+            actionsOneTime.fetchArchiveOneTimes({variables:{filter:values}});
+        } else {
+            alert('Выберите таблицу для фильтрации');
+        }
+    }
+
+    const resetFilter = () => {
+        if (selectedKey==='1') {
+            actionsSchedule.fetchArchiveSchedules({variables:{filter:{}}});
+        } else if (selectedKey==='2') {
+            actionsRecall.fetchArchiveRecalls({variables:{filter:{}}});
+        }
+        else if (selectedKey==='3') {
+            actionsOneTime.fetchArchiveOneTimes({variables:{filter:{}}});
+        } else {
+            alert('Выберите таблицу для фильтрации');
+        }
+    }
     
-    // Заглушка для отображения контента в зависимости от выбранного меню
     const renderContent = (key) => {
         const selectedLabel = menuItems.find(item => item.key === key)?.label || '';
         return (    
@@ -272,13 +303,24 @@ const ArchivePage = () => {
                     transition: 'transform 0.3s ease-out',
                     display: 'flex',
                     flexDirection: 'column',
-                    margin:5
+                    margin:5,
+                    minHeight: 0
                 }}
             >
                 {contextHolder}
-                <Card style={{ overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column', padding: 0 }}>
-                    <Layout style={{ height: '100%', background: 'transparent' }}>
-                        <Sider width={250} style={{ background: 'rgba(255, 255, 255, 0.6)', borderRadius: '8px 0 0 8px', backdropFilter: 'blur(5px)' }}>
+                <Card style={{ overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column', padding: 0, minHeight:0 }}>
+                    <Layout style={{ height: '100%', background: 'transparent', minHeight:0 }}>
+                        <Sider 
+                            width={250} 
+                            style={{ 
+                                background: 'rgba(255, 255, 255, 0.6)', 
+                                borderRadius: '8px 0 0 8px', 
+                                backdropFilter: 'blur(5px)', 
+                                height: '100%', 
+                                overflowY: 'auto', 
+                                overflowX: 'hidden', 
+                                paddingRight:'24px' 
+                            }}>
                             <Title level={5} style={{ padding: '0 14px', color: 'gray' }}>Таблицы архива</Title>
                             <Menu
                                 mode="inline"
@@ -287,15 +329,23 @@ const ArchivePage = () => {
                                 onSelect={({ key }) => setSelectedKey(key)}
                                 style={{ background: 'transparent', border: 'none' }}
                             />
-                            <Divider />
-                            <Flex vertical gap="middle" style={{ padding: '0 14px' }}>
-                                <Title level={5} style={{ color: 'gray' }}>Фильтрация</Title>
-                                <Input.Search placeholder="Поиск..." allowClear />
-                                <DatePicker.RangePicker style={{ width: '100%' }} />
-                            </Flex>
+                            <Divider style={{color:'gray', margin:0}}>Фильтрация</Divider>
+                            <FilterComponent onChange={submitFilter} onReset={resetFilter} selectedKey={selectedKey}/>
                         </Sider>
-                        <Content style={{ minHeight: 280, background: 'rgba(255, 255, 255, 0.8)', borderRadius: '0 8px 8px 0', backdropFilter: 'blur(5px)' }}>
+                        <Content style={{ minHeight: 0, background: 'rgba(255, 255, 255, 0.8)', borderRadius: '0 8px 8px 0', backdropFilter: 'blur(5px)' }}>
                             {renderContent(selectedKey)}
+                            <Drawer
+                                open={isFilterOpen}
+                                onClose={() => setIsFilterOpen(false)}
+                                placement="left"
+                                width={420}
+                                title="Фильтры"
+                                // destroyOnHidden
+                                mask
+                                styles={{body:{padding:'5px 10px'}}}
+                            >
+                                <FilterComponent />
+                            </Drawer>
                         </Content>
                     </Layout>
                 </Card>

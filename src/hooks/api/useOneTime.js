@@ -4,7 +4,8 @@ import {
     CREATE_ONETIME_TASK,
     GET_ONETIME_TASKS,
     DELETE_ONETIME_TASK,
-    ARCHIVE_ONETINE_TASK
+    ARCHIVE_ONETINE_TASK,
+    GET_ARCHIVE_ONETIME_TASKS,
 } from "../../query/OneTimeQuery.js";
 
 /**
@@ -82,6 +83,14 @@ export function useOneTime(options = {}) {
         }
     );
 
+    const [fetchArchiveOneTimes, { data: dataFetchArchiveOneTimes, loading: loadingFetchArchiveOneTimes }] = useLazyQuery(
+        GET_ARCHIVE_ONETIME_TASKS,
+        {
+            fetchPolicy: "network-only",
+            onError: handleError
+        }
+    );   
+
     // Обёртки для действий, чтобы очищать последнюю ошибку перед выполнением.
     const handleCreateOneTime = useCallback(async (variables) => {
         setLastError(null);
@@ -104,20 +113,27 @@ export function useOneTime(options = {}) {
         () => dataFetchOneTimes?.getOneTimes ?? [],
         [dataFetchOneTimes]
     );
-
+    // Мемоизированный массив архивных задач
+    const fetchArchiveOneTimesData = useMemo(
+        () => dataFetchArchiveOneTimes?.getArchiveOneTimes ?? [],
+        [dataFetchArchiveOneTimes]
+    );
     return useMemo(() => ({
         oneTimes,
         fetchOneTimesData,
+        fetchArchiveOneTimesData,
         lastError,
         loading: {
             oneTimes: loadingOneTimes,
             fetchOneTimes: loadingFetchOneTimes,
+            fetchArchiveOneTimes: loadingFetchArchiveOneTimes,
             create: loadingCreateOneTime,
             delete: loadingDeleteOneTime,
             archive: loadingArchiveOneTime
         },
         actions: {
             fetchOneTimes,
+            fetchArchiveOneTimes,
             refetchOneTimes,
             createOneTime: handleCreateOneTime,
             deleteOneTime: handleDeleteOneTime,
@@ -126,13 +142,16 @@ export function useOneTime(options = {}) {
     }), [
         oneTimes,
         fetchOneTimesData,
+        fetchArchiveOneTimesData,
         lastError,
         loadingOneTimes,
         loadingFetchOneTimes,
         loadingCreateOneTime,
         loadingDeleteOneTime,
         loadingArchiveOneTime,
+        loadingFetchArchiveOneTimes,
         fetchOneTimes,
+        fetchArchiveOneTimes,
         refetchOneTimes,
         handleCreateOneTime,
         handleDeleteOneTime,

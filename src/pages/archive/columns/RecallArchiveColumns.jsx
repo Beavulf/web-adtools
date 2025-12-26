@@ -7,10 +7,10 @@ import { Tag } from "antd";
 
 const recallColumns = [
   {
-    title: "ФИО",
-    dataIndex: ["schedule", "fio"],
-    key: "fio",
-    render: (_, record) => record?.schedule?.fio || "-",
+    title: "ID",
+    dataIndex: "scheduleId",
+    key: "scheduleId",
+    // render: (_, record) => record?.schedule?.fio || "-",
     sorter: (a, b) => (a?.schedule?.fio || "").localeCompare(b?.schedule?.fio || "", "ru", { sensitivity: "base" }),
     ellipsis: true,
   },
@@ -80,6 +80,27 @@ const recallColumns = [
     title: "Дата созд.",
     dataIndex: "createdAt",
     key: "createdAt",
+    render: (text) => {
+      if (!text) return "-";
+      const d = new Date(text);
+      if (isNaN(d)) return "-";
+      return <span>{`${d.toLocaleDateString()} ${d.toLocaleTimeString()}`}</span>;
+    },
+    sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+    ellipsis: true,
+  },
+  {
+    title: "Обновлена",
+    dataIndex: "updatedBy",
+    key: "updatedBy",
+    render: (text) => <span style={{ color: "gray" }}>{text}</span>,
+    sorter: (a, b) => (a.createdBy || "").localeCompare(b.createdBy || "", "en", { sensitivity: "base" }),
+    ellipsis: true,
+  },
+  {
+    title: "Дата изм.",
+    dataIndex: "updatedAt",
+    key: "updatedAt",
     render: (text) => {
       if (!text) return "-";
       const d = new Date(text);

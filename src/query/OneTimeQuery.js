@@ -13,8 +13,8 @@ const CREATE_ONETIME_TASK = gql`
 `;
 
 const GET_ONETIME_TASKS = gql`
-    query GetOneTimes($filter: OneTimeFilterInput!) {
-        getOneTimes(filter: $filter) 
+    query GetOneTimes($filter: OneTimeFilterInput!, $take: Float, $skip: Float) {
+        getOneTimes(filter: $filter, take: $take, skip: $skip)
     {
         id
         login
@@ -43,9 +43,29 @@ const ARCHIVE_ONETINE_TASK = gql`
     }
 `;
 
+const GET_ARCHIVE_ONETIME_TASKS = gql`
+    query GetArchiveOneTimes($filter: OneTimeFilterInput!, $take: Float, $skip: Float) {
+        getArchiveOneTimes(filter: $filter, take: $take, skip: $skip) 
+    {
+        id
+        login
+        fio
+        date
+        isCompleate
+        state
+        description
+        createdAt
+        updatedAt
+        createdBy
+        updatedBy
+    }
+}
+`;
+
 export {
     CREATE_ONETIME_TASK,
     GET_ONETIME_TASKS,
     DELETE_ONETIME_TASK,
-    ARCHIVE_ONETINE_TASK
+    ARCHIVE_ONETINE_TASK,
+    GET_ARCHIVE_ONETIME_TASKS
 }

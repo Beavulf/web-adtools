@@ -95,8 +95,8 @@ query GetSchedules($filter: ScheduleFilterInput!) {
 `;
 
 const GET_FIO_ARCHIVE_SCHEDULES = gql`
-    query GetArchiveSchedules($filter: ScheduleFilterInput!) {
-        getArchiveSchedules(filter: $filter) 
+    query GetArchiveSchedules($filter: ScheduleFilterInput!, $take: Float, $skip: Float) {
+        getArchiveSchedules(filter: $filter, take: $take, skip: $skip) 
     {
         id
         fio

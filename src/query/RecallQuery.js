@@ -12,8 +12,8 @@ const CREATE_RECALL = gql`
 `;
 
 const GET_RECALLS = gql`
-    query GetRecalls($filter: RecallFilterInput!) {
-        getRecalls(filter: $filter) 
+    query GetRecalls($filter: RecallFilterInput!, $take: Float, $skip: Float) {
+        getRecalls(filter: $filter, take: $take, skip: $skip) 
     {
         id
         order
@@ -45,8 +45,8 @@ const ARCHIVE_RECALL = gql`
 `;
 
 const GET_ARCHIVE_RECALLS = gql`
-    query GetArchiveRecalls($filter: RecallFilterInput!) {
-        getArchiveRecalls(filter: $filter) 
+    query GetArchiveRecalls($filter: RecallFilterInput!, $take: Float, $skip: Float) {
+        getArchiveRecalls(filter: $filter, take: $take, skip: $skip) 
         {
             id
             order
@@ -55,6 +55,8 @@ const GET_ARCHIVE_RECALLS = gql`
             status
             createdAt
             createdBy
+            updatedAt
+            updatedBy
             description
             scheduleId
         }
